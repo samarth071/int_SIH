@@ -1,0 +1,96 @@
+.myrequests-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-5);
+}
+
+.myrequest-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-3);
+}
+
+/* Header row */
+.myrequest-header {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-3);
+}
+
+.myrequest-icon-wrap {
+  width: 44px;
+  height: 44px;
+  background: var(--cp-primary-light);
+  color: var(--cp-primary);
+  border-radius: var(--cp-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.myrequest-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.myrequest-type {
+  font-size: var(--cp-font-size-base);
+  font-weight: 600;
+  color: var(--cp-text);
+  margin-bottom: 2px;
+}
+
+.myrequest-id {
+  font-size: var(--cp-font-size-xs);
+  color: var(--cp-text-muted);
+  font-weight: 500;
+}
+
+/* Details */
+.myrequest-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-3) var(--cp-space-4);
+  background: var(--cp-surface-2);
+  border-radius: var(--cp-radius);
+}
+
+.myrequest-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cp-space-2);
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+  text-transform: capitalize;
+}
+
+.myrequest-detail-row svg { color: var(--cp-text-muted); flex-shrink: 0; margin-top: 2px; }
+.myrequest-detail-row strong { color: var(--cp-text); }
+
+.myrequest-eta {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 3px 10px;
+  background: var(--cp-warning-light);
+  color: var(--cp-warning);
+  border-radius: var(--cp-radius-full);
+  font-size: var(--cp-font-size-xs);
+  font-weight: 600;
+}
+
+.myrequest-desc {
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+  line-height: 1.55;
+}
+
+.myrequest-timeline-label {
+  font-size: var(--cp-font-size-sm);
+  font-weight: 600;
+  color: var(--cp-text);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: var(--cp-space-2);
+}

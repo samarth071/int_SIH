@@ -1,0 +1,76 @@
+.quick-action-card {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-3);
+  width: 100%;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  padding: var(--cp-space-4) var(--cp-space-5);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--cp-transition);
+  box-shadow: var(--cp-shadow-sm);
+}
+
+.quick-action-card:hover {
+  box-shadow: var(--cp-shadow-md);
+  transform: translateY(-1px);
+}
+
+.quick-action-card:focus-visible {
+  outline: 2px solid var(--cp-primary);
+  outline-offset: 2px;
+}
+
+/* Variants */
+.quick-action-card--default .quick-action-icon { background: var(--cp-primary-light); color: var(--cp-primary); }
+.quick-action-card--default:hover { border-color: var(--cp-primary-border); }
+
+.quick-action-card--danger .quick-action-icon { background: var(--cp-danger-light); color: var(--cp-danger); }
+.quick-action-card--danger:hover { border-color: var(--cp-danger-border); }
+
+.quick-action-card--warning .quick-action-icon { background: var(--cp-warning-light); color: var(--cp-warning); }
+.quick-action-card--warning:hover { border-color: var(--cp-warning-border); }
+
+.quick-action-card--success .quick-action-icon { background: var(--cp-success-light); color: var(--cp-success); }
+.quick-action-card--success:hover { border-color: var(--cp-success-border); }
+
+.quick-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--cp-radius);
+  flex-shrink: 0;
+  transition: var(--cp-transition-fast);
+}
+
+.quick-action-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-action-label {
+  display: block;
+  font-size: var(--cp-font-size-base);
+  font-weight: 600;
+  color: var(--cp-text);
+  margin-bottom: 2px;
+}
+
+.quick-action-desc {
+  display: block;
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Chevron */
+.quick-action-card > svg {
+  color: var(--cp-text-muted);
+  flex-shrink: 0;
+}
