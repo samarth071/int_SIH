@@ -14,13 +14,185 @@ import {
 } from 'lucide-react';
 
 export default function Overview({ mockQueue, setMockQueue }) {
-  // Critical Alerts list (Card 19)
-  const alerts = [
-    { id: 1, type: 'critical', text: '12 new SOS requests — Zone A', time: '2 min ago' },
-    { id: 2, type: 'high', text: 'Medical supplies below threshold — Center #04', time: '10 min ago' },
-    { id: 3, type: 'high', text: 'Flood risk increased — Zone B', time: '14 min ago' },
-    { id: 4, type: 'medium', text: '7 LoRa mesh nodes offline', time: '30 min ago' }
-  ];
+  // Critical Alerts list with coordinates for proximity grouping (Card 19)
+  const [alerts, setAlerts] = useState([
+    // Volunteer alerts
+    { 
+      id: 1, 
+      source: 'volunteer', 
+      reporterName: 'Rahul K. (Volunteer)', 
+      type: 'critical', 
+      text: 'Water levels rising rapidly near bridge, block is flooded', 
+      time: '2 min ago',
+      x: 220, 
+      y: 140, 
+      locationName: 'Vidhana Soudha'
+    },
+    { 
+      id: 2, 
+      source: 'volunteer', 
+      reporterName: 'Sneha M. (Volunteer)', 
+      type: 'high', 
+      text: 'Relief Center #04 running out of insulin and clean syringes', 
+      time: '10 min ago',
+      x: 520, 
+      y: 190, 
+      locationName: 'Cunningham Road'
+    },
+    { 
+      id: 3, 
+      source: 'volunteer', 
+      reporterName: 'Anil P. (Volunteer)', 
+      type: 'medium', 
+      text: '7 LoRa mesh nodes offline due to power loss', 
+      time: '30 min ago',
+      x: 380, 
+      y: 280, 
+      locationName: 'Richmond Town'
+    },
+    {
+      id: 4,
+      source: 'volunteer',
+      reporterName: 'David J. (Volunteer)',
+      type: 'critical',
+      text: 'Road cave-in reported. Blocking emergency vehicles.',
+      time: '45 min ago',
+      x: 230,
+      y: 145,
+      locationName: 'Vidhana Soudha'
+    },
+    
+    // Citizen alerts
+    { 
+      id: 5, 
+      source: 'citizen', 
+      reporterName: 'Karan S. (Citizen)', 
+      type: 'critical', 
+      text: 'Elderly couple trapped on 2nd floor, water entering lobby', 
+      time: '5 min ago',
+      x: 210, 
+      y: 135,
+      locationName: 'Vidhana Soudha'
+    },
+    { 
+      id: 6, 
+      source: 'citizen', 
+      reporterName: 'Priya R. (Citizen)', 
+      type: 'high', 
+      text: 'Severe water logging inside homes. Need immediate assistance.', 
+      time: '12 min ago',
+      x: 530, 
+      y: 195,
+      locationName: 'Cunningham Road'
+    },
+    { 
+      id: 7, 
+      source: 'citizen', 
+      reporterName: 'Vikram A. (Citizen)', 
+      type: 'medium', 
+      text: 'Tree fallen on power lines. Sparks visible.', 
+      time: '18 min ago',
+      x: 500, 
+      y: 180,
+      locationName: 'Vasanth Nagar'
+    },
+    {
+      id: 8,
+      source: 'citizen',
+      reporterName: 'Sunita G. (Citizen)',
+      type: 'high',
+      text: 'Shortage of drinking water. 50+ residents affected.',
+      time: '25 min ago',
+      x: 390,
+      y: 275,
+      locationName: 'Richmond Town'
+    }
+  ]);
+
+  const [selectedRegion, setSelectedRegion] = useState(null); // { nodeId, name, x, y, radius }
+  const [activeAlertTab, setActiveAlertTab] = useState('volunteer'); // 'volunteer', 'citizen', 'grouped'
+
+  // Get active pixel radius based on selection
+  const currentRadiusPx = selectedRegion 
+    ? (selectedRegion.radius === 500 ? 50 : selectedRegion.radius === 1000 ? 100 : 200)
+    : 50; // default 500m (50px)
+
+  // Filter alerts by selected region coordinates on map
+  const regionFilteredAlerts = selectedRegion
+    ? alerts.filter(a => {
+        const dx = a.x - selectedRegion.x;
+        const dy = a.y - selectedRegion.y;
+        return Math.sqrt(dx * dx + dy * dy) <= currentRadiusPx;
+      })
+    : alerts;
+
+  // Group alerts into proximity clusters using map pixel coordinates
+  const getGroupedAlerts = (alertsList, radiusPx) => {
+    const clusters = [];
+    alertsList.forEach((alert) => {
+      let addedToCluster = false;
+      for (let cluster of clusters) {
+        const distance = Math.sqrt(
+          (alert.x - cluster.center.x) ** 2 + (alert.y - cluster.center.y) ** 2
+        );
+        if (distance <= radiusPx) {
+          cluster.alerts.push(alert);
+          // Recalculate center centroid
+          const total = cluster.alerts.length;
+          cluster.center.x =
+            cluster.alerts.reduce((sum, a) => sum + a.x, 0) / total;
+          cluster.center.y =
+            cluster.alerts.reduce((sum, a) => sum + a.y, 0) / total;
+          addedToCluster = true;
+          break;
+        }
+      }
+      if (!addedToCluster) {
+        clusters.push({
+          id: `cluster-${alert.id}`,
+          center: { x: alert.x, y: alert.y },
+          locationName: alert.locationName,
+          alerts: [alert]
+        });
+      }
+    });
+    return clusters;
+  };
+
+  // Metric scaling factor based on radius
+  const getMetricScaleFactor = () => {
+    if (!selectedRegion) return 1.0;
+    switch (selectedRegion.radius) {
+      case 500: return 0.25;
+      case 1000: return 0.45;
+      case 2000: return 0.75;
+      default: return 1.0;
+    }
+  };
+
+  const scale = getMetricScaleFactor();
+
+  // Prepare alerts for rendering
+  const filteredAlerts = regionFilteredAlerts.filter(a => a.source === activeAlertTab);
+  const groupedAlerts = getGroupedAlerts(regionFilteredAlerts, currentRadiusPx);
+  const activeAlertCount = activeAlertTab === 'grouped' ? regionFilteredAlerts.length : filteredAlerts.length;
+
+  // Queue coordinates for priority list filtering
+  const queueLocationCoords = {
+    'Mysuru East': { x: 220, y: 140 },
+    'Zone B': { x: 380, y: 280 },
+    'Zone C': { x: 520, y: 190 },
+    'Relief Center #04': { x: 290, y: 180 }
+  };
+
+  const filteredQueue = selectedRegion
+    ? mockQueue.filter(row => {
+        const coords = queueLocationCoords[row.location] || { x: 0, y: 0 };
+        const dx = coords.x - selectedRegion.x;
+        const dy = coords.y - selectedRegion.y;
+        return Math.sqrt(dx * dx + dy * dy) <= currentRadiusPx;
+      })
+    : mockQueue;
 
   return (
     <div style={styles.container}>
@@ -33,13 +205,13 @@ export default function Overview({ mockQueue, setMockQueue }) {
             <AlertOctagon size={16} color="#ef4444" />
           </div>
           <div style={styles.cardBody}>
-            <div style={styles.primaryVal}>24</div>
-            <div style={{ ...styles.secondaryVal, color: '#ef4444' }}>+5 in last hour</div>
+            <div style={styles.primaryVal}>{Math.round(24 * scale)}</div>
+            <div style={{ ...styles.secondaryVal, color: '#ef4444' }}>+{Math.max(1, Math.round(5 * scale))} in last hour</div>
           </div>
           <div style={styles.cardFooter}>
-            <span style={styles.footerItem}>Crit: <strong style={{color:'#ef4444'}}>6</strong></span>
-            <span style={styles.footerItem}>High: <strong style={{color:'#f97316'}}>11</strong></span>
-            <span style={styles.footerItem}>Med: <strong style={{color:'#eab308'}}>7</strong></span>
+            <span style={styles.footerItem}>Crit: <strong style={{color:'#ef4444'}}>{Math.round(6 * scale)}</strong></span>
+            <span style={styles.footerItem}>High: <strong style={{color:'#f97316'}}>{Math.round(11 * scale)}</strong></span>
+            <span style={styles.footerItem}>Med: <strong style={{color:'#eab308'}}>{Math.round(7 * scale)}</strong></span>
           </div>
         </div>
 
@@ -50,13 +222,13 @@ export default function Overview({ mockQueue, setMockQueue }) {
             <AlertTriangle size={16} color="#f97316" />
           </div>
           <div style={styles.cardBody}>
-            <div style={styles.primaryVal}>137</div>
-            <div style={{ ...styles.secondaryVal, color: '#f97316' }}>Waiting: 82</div>
+            <div style={styles.primaryVal}>{Math.round(137 * scale)}</div>
+            <div style={{ ...styles.secondaryVal, color: '#f97316' }}>Waiting: {Math.round(82 * scale)}</div>
           </div>
           <div style={styles.cardFooter}>
-            <span style={styles.footerItem}>Pending: <strong>82</strong></span>
-            <span style={styles.footerItem}>Progress: <strong>41</strong></span>
-            <span style={styles.footerItem}>Done: <strong>14</strong></span>
+            <span style={styles.footerItem}>Pending: <strong>{Math.round(82 * scale)}</strong></span>
+            <span style={styles.footerItem}>Progress: <strong>{Math.round(41 * scale)}</strong></span>
+            <span style={styles.footerItem}>Done: <strong>{Math.round(14 * scale)}</strong></span>
           </div>
         </div>
 
@@ -67,13 +239,13 @@ export default function Overview({ mockQueue, setMockQueue }) {
             <Users size={16} color="#a1a1aa" />
           </div>
           <div style={styles.cardBody}>
-            <div style={styles.primaryVal}>8,492</div>
-            <div style={{ ...styles.secondaryVal, color: '#a1a1aa' }}>Rescued: 3,240</div>
+            <div style={styles.primaryVal}>{Math.round(8492 * scale).toLocaleString()}</div>
+            <div style={{ ...styles.secondaryVal, color: '#a1a1aa' }}>Rescued: {Math.round(3240 * scale).toLocaleString()}</div>
           </div>
           <div style={styles.cardFooter}>
-            <span style={styles.footerItem}>Evac: <strong>2.8k</strong></span>
-            <span style={styles.footerItem}>Missing: <strong style={{color:'#ef4444'}}>436</strong></span>
-            <span style={styles.footerItem}>Displaced: <strong>2k</strong></span>
+            <span style={styles.footerItem}>Evac: <strong>{selectedRegion ? `${(2.8 * scale).toFixed(1)}k` : '2.8k'}</strong></span>
+            <span style={styles.footerItem}>Missing: <strong style={{color:'#ef4444'}}>{Math.round(436 * scale)}</strong></span>
+            <span style={styles.footerItem}>Displaced: <strong>{selectedRegion ? `${(2 * scale).toFixed(1)}k` : '2k'}</strong></span>
           </div>
         </div>
 
@@ -84,13 +256,13 @@ export default function Overview({ mockQueue, setMockQueue }) {
             <TrendingUp size={16} color="#3b82f6" />
           </div>
           <div style={styles.cardBody}>
-            <div style={styles.primaryVal}>86</div>
-            <div style={{ ...styles.secondaryVal, color: '#3b82f6' }}>Assigned: 41</div>
+            <div style={styles.primaryVal}>{Math.round(86 * scale)}</div>
+            <div style={{ ...styles.secondaryVal, color: '#3b82f6' }}>Assigned: {Math.round(41 * scale)}</div>
           </div>
           <div style={styles.cardFooter}>
-            <span style={styles.footerItem}>Avail: <strong>32</strong></span>
-            <span style={styles.footerItem}>En Route: <strong>13</strong></span>
-            <span style={styles.footerItem}>Offline: <strong>8</strong></span>
+            <span style={styles.footerItem}>Avail: <strong>{Math.round(32 * scale)}</strong></span>
+            <span style={styles.footerItem}>En Route: <strong>{Math.round(13 * scale)}</strong></span>
+            <span style={styles.footerItem}>Offline: <strong>{Math.round(8 * scale)}</strong></span>
           </div>
         </div>
 
@@ -101,13 +273,13 @@ export default function Overview({ mockQueue, setMockQueue }) {
             <Home size={16} color="#10b981" />
           </div>
           <div style={styles.cardBody}>
-            <div style={styles.primaryVal}>18</div>
-            <div style={{ ...styles.secondaryVal, color: '#10b981' }}>4 Near Capacity</div>
+            <div style={styles.primaryVal}>{Math.round(18 * scale)}</div>
+            <div style={{ ...styles.secondaryVal, color: '#10b981' }}>{Math.max(1, Math.round(4 * scale))} Near Capacity</div>
           </div>
           <div style={styles.cardFooter}>
-            <span style={styles.footerItem}>Total Cap: <strong>6.5k</strong></span>
-            <span style={styles.footerItem}>Occupied: <strong>5.2k</strong></span>
-            <span style={styles.footerItem}>Avail: <strong>1.2k</strong></span>
+            <span style={styles.footerItem}>Total Cap: <strong>{selectedRegion ? `${(6.5 * scale).toFixed(1)}k` : '6.5k'}</strong></span>
+            <span style={styles.footerItem}>Occupied: <strong>{selectedRegion ? `${(5.2 * scale).toFixed(1)}k` : '5.2k'}</strong></span>
+            <span style={styles.footerItem}>Avail: <strong>{selectedRegion ? `${(1.3 * scale).toFixed(1)}k` : '1.2k'}</strong></span>
           </div>
         </div>
       </div>
@@ -116,35 +288,124 @@ export default function Overview({ mockQueue, setMockQueue }) {
       <div className="bento-grid" style={{ marginBottom: '24px' }}>
         {/* Map - 8 Columns */}
         <div className="col-8" style={{ height: '450px' }}>
-          <LiveDisasterMap />
+          <LiveDisasterMap 
+            selectedRegion={selectedRegion}
+            onSelectRegion={setSelectedRegion}
+            onResetSelection={() => setSelectedRegion(null)}
+          />
         </div>
 
         {/* Critical Alerts - 4 Columns */}
         <div className="col-4 glass-panel" style={{ height: '450px', padding: '20px', display: 'flex', flexDirection: 'column' }}>
           <div style={styles.panelHeader}>
             <h3 style={styles.panelTitle}>Critical Alerts</h3>
-            <span style={styles.alertCounter}>{alerts.length}</span>
+            <span style={styles.alertCounter}>{activeAlertCount}</span>
+          </div>
+
+          {/* Sub-tabs / Filters */}
+          <div style={styles.alertTabContainer}>
+            <button 
+              style={{
+                ...styles.alertTab,
+                ...(activeAlertTab === 'volunteer' ? styles.alertTabActive : {})
+              }}
+              onClick={() => setActiveAlertTab('volunteer')}
+            >
+              Volunteer ({regionFilteredAlerts.filter(a => a.source === 'volunteer').length})
+            </button>
+            <button 
+              style={{
+                ...styles.alertTab,
+                ...(activeAlertTab === 'citizen' ? styles.alertTabActive : {})
+              }}
+              onClick={() => setActiveAlertTab('citizen')}
+            >
+              Citizen ({regionFilteredAlerts.filter(a => a.source === 'citizen').length})
+            </button>
+            <button 
+              style={{
+                ...styles.alertTab,
+                ...(activeAlertTab === 'grouped' ? styles.alertTabActive : {})
+              }}
+              onClick={() => setActiveAlertTab('grouped')}
+            >
+              Grouped ({groupedAlerts.length})
+            </button>
           </div>
           
           <div style={styles.alertsList}>
-            {alerts.map(alert => (
-              <div 
-                key={alert.id} 
-                style={{ 
-                  ...styles.alertItem,
-                  borderLeft: `3px solid ${alert.type === 'critical' ? '#ef4444' : alert.type === 'high' ? '#f97316' : '#eab308'}`
-                }}
-              >
-                <div style={styles.alertMain}>
-                  <div style={styles.alertText}>{alert.text}</div>
-                  <div style={styles.alertTime}>{alert.time}</div>
+            {activeAlertTab === 'grouped' ? (
+              groupedAlerts.map(group => (
+                <div key={group.id} style={styles.groupContainer}>
+                  <div style={styles.groupHeader}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <MapPin size={12} color="#ef4444" />
+                      <span style={styles.groupTitle}>
+                        {group.locationName} Region
+                      </span>
+                    </div>
+                    <span style={styles.groupBadge}>
+                      {group.alerts.length} {group.alerts.length === 1 ? 'Alert' : 'Alerts'}
+                    </span>
+                  </div>
+                  <div style={styles.groupAlertsList}>
+                    {group.alerts.map(alert => (
+                      <div 
+                        key={alert.id} 
+                        style={{ 
+                          ...styles.groupAlertItem,
+                          borderLeft: `3px solid ${alert.type === 'critical' ? '#ef4444' : alert.type === 'high' ? '#f97316' : '#eab308'}`
+                        }}
+                      >
+                        <div style={styles.alertMain}>
+                          <div style={styles.reporterRow}>
+                            <span style={styles.reporterName}>
+                              {alert.source === 'volunteer' ? '🛡️ ' : '👤 '}
+                              {alert.reporterName}
+                            </span>
+                            <span style={styles.alertTime}>{alert.time}</span>
+                          </div>
+                          <div style={styles.alertText}>{alert.text}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              filteredAlerts.map(alert => (
+                <div 
+                  key={alert.id} 
+                  style={{ 
+                    ...styles.alertItem,
+                    borderLeft: `3px solid ${alert.type === 'critical' ? '#ef4444' : alert.type === 'high' ? '#f97316' : '#eab308'}`
+                  }}
+                >
+                  <div style={styles.alertMain}>
+                    <div style={styles.reporterRow}>
+                      <span style={styles.reporterName}>
+                        {alert.source === 'volunteer' ? '🛡️ ' : '👤 '}
+                        {alert.reporterName}
+                      </span>
+                      <span style={styles.alertTime}>{alert.time}</span>
+                    </div>
+                    <div style={styles.alertText}>{alert.text}</div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <div style={styles.alertActions}>
-            <button style={styles.alertBtn}>Acknowledge All</button>
+            <button style={styles.alertBtn} onClick={() => {
+              if (activeAlertTab === 'grouped') {
+                setAlerts([]);
+              } else {
+                setAlerts(alerts.filter(a => a.source !== activeAlertTab));
+              }
+            }}>
+              Acknowledge All
+            </button>
             <button style={styles.alertBtnMuted}>View Logs</button>
           </div>
         </div>
@@ -153,13 +414,13 @@ export default function Overview({ mockQueue, setMockQueue }) {
       {/* Charts Bento Row */}
       <div className="bento-grid" style={{ marginBottom: '24px' }}>
         <div className="col-4 glass-panel" style={styles.chartCard}>
-          <SOSDonutChart />
+          <SOSDonutChart scale={scale} />
         </div>
         <div className="col-4 glass-panel" style={styles.chartCard}>
-          <IncidentBarChart />
+          <IncidentBarChart scale={scale} />
         </div>
         <div className="col-4 glass-panel" style={styles.chartCard}>
-          <EmergencyLineChart />
+          <EmergencyLineChart scale={scale} />
         </div>
       </div>
 
@@ -201,7 +462,7 @@ export default function Overview({ mockQueue, setMockQueue }) {
               </tr>
             </thead>
             <tbody>
-              {mockQueue.map((row, idx) => (
+              {filteredQueue.map((row, idx) => (
                 <tr key={idx} style={styles.tr}>
                   <td style={styles.td}>
                     <span 
@@ -485,5 +746,129 @@ const styles = {
     borderRadius: '10px',
     fontSize: '10px',
     fontWeight: '600'
+  },
+  alertTabContainer: {
+    display: 'flex',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    borderRadius: '8px',
+    padding: '3px',
+    marginBottom: '12px',
+    gap: '2px'
+  },
+  alertTab: {
+    flex: 1,
+    border: 'none',
+    backgroundColor: 'transparent',
+    color: '#a1a1aa',
+    fontSize: '11px',
+    fontWeight: '600',
+    padding: '6px 0',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    textAlign: 'center',
+    transition: 'all 0.2s ease',
+    outline: 'none'
+  },
+  alertTabActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    color: '#ffffff',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+  },
+  radiusSelectorContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    border: '1px solid rgba(255, 255, 255, 0.03)',
+    borderRadius: '6px',
+    padding: '6px 8px',
+    marginBottom: '12px'
+  },
+  radiusLabel: {
+    fontSize: '10px',
+    fontWeight: '600',
+    color: '#71717a',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  radiusButtons: {
+    display: 'flex',
+    gap: '4px'
+  },
+  radiusBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    color: '#a1a1aa',
+    fontSize: '10px',
+    fontWeight: '600',
+    padding: '3px 8px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease',
+    outline: 'none'
+  },
+  radiusBtnActive: {
+    backgroundColor: '#ffffff',
+    border: '1px solid #ffffff',
+    color: '#0c0c0e'
+  },
+  groupContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    border: '1px solid rgba(255, 255, 255, 0.04)',
+    borderRadius: '10px',
+    padding: '10px',
+    marginBottom: '12px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  groupHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 2px',
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#ffffff',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+    paddingBottom: '6px'
+  },
+  groupTitle: {
+    letterSpacing: '0.3px',
+    fontSize: '11px'
+  },
+  groupBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    color: '#a1a1aa',
+    fontSize: '9px',
+    fontWeight: '600',
+    padding: '2px 6px',
+    borderRadius: '4px'
+  },
+  groupAlertsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  groupAlertItem: {
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    padding: '8px 10px',
+    borderRadius: '6px',
+    border: '1px solid rgba(255, 255, 255, 0.02)',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  reporterRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: '4px'
+  },
+  reporterName: {
+    fontSize: '10px',
+    fontWeight: '600',
+    color: '#a1a1aa'
   }
 };

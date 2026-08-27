@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 // ==========================================
 // 1. SOS Request Status (DONUT CHART)
 // ==========================================
-export function SOSDonutChart() {
+export function SOSDonutChart({ scale = 1.0 }) {
   const data = [
-    { label: 'Waiting', value: 82, color: '#f97316' },     // Orange
-    { label: 'In Progress', value: 41, color: '#3b82f6' },  // Blue
-    { label: 'Resolved', value: 14, color: '#10b981' }     // Green
+    { label: 'Waiting', value: Math.round(82 * scale), color: '#f97316' },     // Orange
+    { label: 'In Progress', value: Math.round(41 * scale), color: '#3b82f6' },  // Blue
+    { label: 'Resolved', value: Math.round(14 * scale), color: '#10b981' }     // Green
   ];
-  const total = 137;
+  const total = Math.round(137 * scale);
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
   // SVG Calculations
@@ -114,15 +114,15 @@ export function SOSDonutChart() {
 // ==========================================
 // 2. Incident Severity (BAR CHART)
 // ==========================================
-export function IncidentBarChart() {
+export function IncidentBarChart({ scale = 1.0 }) {
   const data = [
-    { label: 'Critical', value: 24, color: '#ef4444' },
-    { label: 'High', value: 38, color: '#f97316' },
-    { label: 'Medium', value: 31, color: '#eab308' },
-    { label: 'Low', value: 15, color: '#10b981' }
+    { label: 'Critical', value: Math.round(24 * scale), color: '#ef4444' },
+    { label: 'High', value: Math.round(38 * scale), color: '#f97316' },
+    { label: 'Medium', value: Math.round(31 * scale), color: '#eab308' },
+    { label: 'Low', value: Math.round(15 * scale), color: '#10b981' }
   ];
 
-  const maxValue = 40;
+  const maxValue = Math.max(5, Math.round(40 * scale));
   const [hoveredIdx, setHoveredIdx] = useState(null);
 
   // SVG dimensions
@@ -140,7 +140,7 @@ export function IncidentBarChart() {
       
       <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`}>
         {/* Horizontal grid lines */}
-        {[0, 10, 20, 30, 40].map((tick, i) => {
+        {[0, Math.round(10 * scale), Math.round(20 * scale), Math.round(30 * scale), Math.round(40 * scale)].map((tick, i) => {
           const y = height - paddingY - (tick / maxValue) * graphHeight;
           return (
             <g key={i}>
@@ -240,17 +240,17 @@ export function IncidentBarChart() {
 // ==========================================
 // 3. Emergency Activity (LINE CHART)
 // ==========================================
-export function EmergencyLineChart() {
+export function EmergencyLineChart({ scale = 1.0 }) {
   // Last 24 hours (simulated intervals: 0h, 4h, 8h, 12h, 16h, 20h, 24h)
   const intervals = ['04:00', '08:00', '12:00', '16:00', '20:00', '00:00', '04:00'];
   
   const lineData = {
-    sos: [10, 18, 45, 82, 95, 115, 137],
-    active: [12, 15, 22, 24, 21, 25, 24],
-    resolved: [2, 5, 8, 11, 12, 13, 14]
+    sos: [10, 18, 45, 82, 95, 115, 137].map(v => Math.round(v * scale)),
+    active: [12, 15, 22, 24, 21, 25, 24].map(v => Math.round(v * scale)),
+    resolved: [2, 5, 8, 11, 12, 13, 14].map(v => Math.round(v * scale))
   };
 
-  const maxValue = 150;
+  const maxValue = Math.max(10, Math.round(150 * scale));
   const [activeMetric, setActiveMetric] = useState('sos'); // 'sos' | 'active' | 'resolved'
   const [hoveredPoint, setHoveredPoint] = useState(null);
 
@@ -316,7 +316,7 @@ export function EmergencyLineChart() {
         </defs>
 
         {/* Horizontal grid lines */}
-        {[0, 50, 100, 150].map((tick, i) => {
+        {[0, Math.round(50 * scale), Math.round(100 * scale), Math.round(150 * scale)].map((tick, i) => {
           const y = height - paddingY - (tick / maxValue) * graphHeight;
           return (
             <g key={i}>

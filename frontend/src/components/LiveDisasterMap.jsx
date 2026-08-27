@@ -11,7 +11,7 @@ import {
   Eye
 } from 'lucide-react';
 
-export default function LiveDisasterMap() {
+export default function LiveDisasterMap({ selectedRegion, onSelectRegion, onResetSelection }) {
   const [activeLayers, setActiveLayers] = useState({
     incidents: true,
     sos: true,
@@ -25,6 +25,34 @@ export default function LiveDisasterMap() {
   });
 
   const [selectedNode, setSelectedNode] = useState(null);
+
+  const handleMapClick = (e) => {
+    // If the user clicked on an interactive node, ignore it
+    let current = e.target;
+    while (current && current !== e.currentTarget) {
+      if (current.tagName === 'g' && current.style.cursor === 'pointer') {
+        return; // Clicked on a marker node, ignore background handler
+      }
+      current = current.parentNode;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    // Scale from element bounds to 700x400 viewBox
+    const svgX = Math.round((clickX / rect.width) * 700);
+    const svgY = Math.round((clickY / rect.height) * 400);
+
+    setSelectedNode({
+      id: 'custom-pin',
+      type: 'custom',
+      x: svgX,
+      y: svgY,
+      label: 'Manual Selection',
+      desc: 'User specified coordinate'
+    });
+  };
 
   // Mock map data locations
   const nodes = [
@@ -63,6 +91,7 @@ export default function LiveDisasterMap() {
       case 'shelters': return '#3b82f6';
       case 'hospitals': return '#10b981';
       case 'responders': return '#ec4899';
+      case 'custom': return '#3b82f6';
       default: return '#ffffff';
     }
   };
@@ -74,9 +103,27 @@ export default function LiveDisasterMap() {
         <div style={styles.titleSection}>
           <Activity size={18} color="#ef4444" style={styles.pulseIcon} />
           <h3 style={styles.title}>Live Disaster Map</h3>
+          {selectedRegion && (
+            <span style={styles.selectedRegionBadge}>
+              📍 Selected: {selectedRegion.name} ({selectedRegion.radius >= 1000 ? `${selectedRegion.radius/1000}km` : `${selectedRegion.radius}m`})
+            </span>
+          )}
         </div>
-        <div style={styles.badge}>
-          <span style={styles.liveDot}></span> Live Telemetry
+        <div style={styles.headerRight}>
+          {selectedRegion && (
+            <button 
+              style={styles.resetBtn} 
+              onClick={() => {
+                onResetSelection();
+                setSelectedNode(null);
+              }}
+            >
+              Reset Selection
+            </button>
+          )}
+          <div style={styles.badge}>
+            <span style={styles.liveDot}></span> Live Telemetry
+          </div>
         </div>
       </div>
 
@@ -116,7 +163,7 @@ export default function LiveDisasterMap() {
         </div>
 
         {/* Custom SVG Map Canvas */}
-        <svg viewBox="0 0 700 400" style={styles.svg}>
+        <svg viewBox="0 0 700 400" style={styles.svg} onClick={handleMapClick}>
           {/* Base Geography / Grid */}
           <defs>
             <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -129,7 +176,33 @@ export default function LiveDisasterMap() {
           </defs>
 
           {/* Grid Background */}
-          <rect width="100%" height="100%" fill="url(#grid)" />
+          <rect id="map-grid" width="100%" height="100%" fill="url(#grid)" />
+
+          {/* Selected Region Circle Overlay */}
+          {selectedRegion && (
+            <g>
+              <circle
+                cx={selectedRegion.x}
+                cy={selectedRegion.y}
+                r={selectedRegion.radius === 500 ? 50 : selectedRegion.radius === 1000 ? 100 : 200}
+                fill="rgba(59, 130, 246, 0.03)"
+                stroke="#3b82f6"
+                strokeWidth="1.5"
+                strokeDasharray="5,3"
+                style={{ pointerEvents: 'none' }}
+              />
+              <circle
+                cx={selectedRegion.x}
+                cy={selectedRegion.y}
+                r={selectedRegion.radius === 500 ? 50 : selectedRegion.radius === 1000 ? 100 : 200}
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="6"
+                opacity="0.1"
+                style={{ pointerEvents: 'none' }}
+              />
+            </g>
+          )}
 
           {/* Topographic Lines / Rivers (Custom Vector art) */}
           <path d="M 0,200 Q 150,150 250,220 T 500,280 T 700,210" fill="none" stroke="rgba(59, 130, 246, 0.12)" strokeWidth="24" />
@@ -178,6 +251,20 @@ export default function LiveDisasterMap() {
           {/* Radar sweep simulation */}
           <circle cx="350" cy="200" r="180" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
           <circle cx="350" cy="200" r="280" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
+
+          {/* Custom Pin Marker */}
+          {selectedNode?.id === 'custom-pin' && (
+            <g transform={`translate(${selectedNode.x}, ${selectedNode.y})`}>
+              <circle r="15" fill="none" stroke="#3b82f6" strokeWidth="1.5" opacity="0.8">
+                <animate attributeName="r" values="5;18" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.8;0" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle r="6" fill="#3b82f6" stroke="#ffffff" strokeWidth="2" />
+              <text y="-14" fill="#ffffff" fontSize="9" fontWeight="bold" textAnchor="middle" style={{ textShadow: '0px 1px 3px rgba(0,0,0,0.9)' }}>
+                Selected Point
+              </text>
+            </g>
+          )}
 
           {/* Render Active Nodes */}
           {nodes
@@ -258,6 +345,37 @@ export default function LiveDisasterMap() {
             </div>
             <div style={styles.popupTitle}>{selectedNode.label}</div>
             <div style={styles.popupDesc}>{selectedNode.desc}</div>
+
+            {/* Filter Dashboard by Radius Controls */}
+            <div style={styles.popupSelectRegionSection}>
+              <span style={styles.radiusLabel}>Filter Dashboard by Radius:</span>
+              <div style={styles.radiusButtons}>
+                {[500, 1000, 2000].map(r => {
+                  const isActive = selectedRegion?.x === selectedNode.x && 
+                                   selectedRegion?.y === selectedNode.y && 
+                                   selectedRegion?.radius === r;
+                  return (
+                    <button
+                      key={r}
+                      style={{
+                        ...styles.radiusBtn,
+                        ...(isActive ? styles.radiusBtnActive : {})
+                      }}
+                      onClick={() => onSelectRegion({
+                        nodeId: selectedNode.id,
+                        name: selectedNode.label.split(':').pop().trim(),
+                        x: selectedNode.x,
+                        y: selectedNode.y,
+                        radius: r
+                      })}
+                    >
+                      {r >= 1000 ? `${r/1000}km` : `${r}m`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div style={styles.popupFooter}>
               <span>Coordinates: {selectedNode.x}°N, {selectedNode.y}°E</span>
               <button style={styles.actionBtn}>
@@ -288,7 +406,7 @@ const styles = {
   titleSection: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: '12px'
   },
   pulseIcon: {
     animation: 'pulse-slow 2s infinite'
@@ -297,6 +415,35 @@ const styles = {
     fontSize: '15px',
     fontWeight: '600',
     color: '#ffffff'
+  },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  selectedRegionBadge: {
+    fontSize: '11px',
+    color: '#3b82f6',
+    background: 'rgba(59, 130, 246, 0.1)',
+    border: '1px solid rgba(59, 130, 246, 0.2)',
+    padding: '3px 8px',
+    borderRadius: '6px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px'
+  },
+  resetBtn: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '6px',
+    color: '#ffffff',
+    fontSize: '10px',
+    fontWeight: '600',
+    padding: '4px 10px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    outline: 'none'
   },
   badge: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -448,5 +595,43 @@ const styles = {
     fontSize: '9px',
     fontWeight: '600',
     cursor: 'pointer'
+  },
+  popupSelectRegionSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+    paddingTop: '10px',
+    marginTop: '4px'
+  },
+  radiusLabel: {
+    fontSize: '10px',
+    fontWeight: '600',
+    color: '#a1a1aa',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  radiusButtons: {
+    display: 'flex',
+    gap: '4px'
+  },
+  radiusBtn: {
+    flex: 1,
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    color: '#a1a1aa',
+    fontSize: '10px',
+    fontWeight: '600',
+    padding: '4px 0',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    textAlign: 'center',
+    transition: 'all 0.15s ease',
+    outline: 'none'
+  },
+  radiusBtnActive: {
+    backgroundColor: '#3b82f6',
+    border: '1px solid #3b82f6',
+    color: '#ffffff'
   }
 };
