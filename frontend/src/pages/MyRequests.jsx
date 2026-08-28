@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { mockMyRequests } from '../data/mockReports.js';
+import { getStoredSosAlerts } from '../lib/api.js';
 import StatusTimeline from '../components/StatusTimeline.jsx';
 import { ArrowLeftIcon, ClockIcon, LocationIcon, FileIcon, PhoneIcon } from '../components/icons.jsx';
 import './MyRequests.css';
@@ -14,18 +16,43 @@ const TYPE_ICON_MAP = {
 };
 
 function formatDate(isoString) {
-  const d = new Date(isoString);
-  return d.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  try {
+    const d = new Date(isoString);
+    return d.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return 'Just now';
+  }
 }
 
 export default function MyRequests({ navigate }) {
-  if (mockMyRequests.length === 0) {
+  const [requests, setRequests] = useState(() => {
+    const stored = getStoredSosAlerts();
+    const storedIds = new Set(stored.map((s) => s.id));
+    const uniqueMock = mockMyRequests.filter((m) => !storedIds.has(m.id));
+    return [...stored, ...uniqueMock];
+  });
+
+  useEffect(() => {
+    function handleNewSos(e) {
+      if (e.detail) {
+        setRequests((prev) => {
+          const filtered = prev.filter((r) => r.id !== e.detail.id);
+          return [e.detail, ...filtered];
+        });
+      }
+    }
+
+    window.addEventListener('sosAlertCreated', handleNewSos);
+    return () => window.removeEventListener('sosAlertCreated', handleNewSos);
+  }, []);
+
+  if (requests.length === 0) {
     return (
       <div className="cp-page">
         <button className="sos-back-btn" onClick={() => navigate('home')}>
@@ -56,7 +83,7 @@ export default function MyRequests({ navigate }) {
       </div>
 
       <div className="myrequests-list">
-        {mockMyRequests.map((req) => {
+        {requests.map((req) => {
           const TypeIcon = TYPE_ICON_MAP[req.type] || FileIcon;
           const isResolved = req.currentStatus === 'resolved';
 

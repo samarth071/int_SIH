@@ -23,13 +23,7 @@ const SunIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height=
 const PanelLeftClose = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/></svg>;
 const PanelLeftOpen = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg>;
 
-const mockNeedsData = [
-  { id: 1, location: 'Village A', requirement: 'Food required', qty: '500 packets', people: 250, priority: 'Critical', status: 'Pending', top: '30%', left: '25%' },
-  { id: 2, location: 'Village B', requirement: 'Water required', qty: '1,000 L', people: 400, priority: 'High', status: 'Pending', top: '55%', left: '60%' },
-  { id: 3, location: 'Shelter C', requirement: 'Medical assistance', qty: '50 units', people: 50, priority: 'Critical', status: 'Pending', top: '20%', left: '75%' },
-  { id: 4, location: 'Village D', requirement: 'Shelter required', qty: '20 tents', people: 100, priority: 'Medium', status: 'Pending', top: '75%', left: '35%' },
-  { id: 5, location: 'Highway 5', requirement: 'Evacuation support', qty: '3 buses', people: 120, priority: 'Under Control', status: 'In Progress', top: '80%', left: '80%' }
-];
+const mockNeedsData = [];
 
 export default function NgoPortal({ theme, setTheme }) {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -37,32 +31,36 @@ export default function NgoPortal({ theme, setTheme }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const [needs, setNeeds] = useState(mockNeedsData);
-  const [operations, setOperations] = useState([
-    { 
-      id: 'OP-101', 
-      activity: 'Food Distribution', 
-      location: 'Village A', 
-      resourcesRequired: [{ name: 'Food', requested: 1000, allocated: 500, unit: 'packets' }], 
-      assignedTeam: [102], 
-      progress: 50,
-      notes: 'Initial drop completed',
-      status: 'In Progress' 
+
+  useEffect(() => {
+    function handleNewSos(e) {
+      const sos = e.detail;
+      if (!sos) return;
+
+      const newNeed = {
+        id: Date.now(),
+        location: sos.location || 'Surat, Gujarat',
+        requirement: `EMERGENCY SOS: ${sos.disasterType.toUpperCase()}`,
+        qty: 'Immediate Rescue',
+        people: 1,
+        priority: 'Critical',
+        status: 'Pending',
+        top: `${Math.floor(Math.random() * 50) + 20}%`,
+        left: `${Math.floor(Math.random() * 50) + 25}%`,
+      };
+
+      setNeeds((prev) => [newNeed, ...prev]);
     }
-  ]);
+
+    window.addEventListener('sosAlertCreated', handleNewSos);
+    return () => window.removeEventListener('sosAlertCreated', handleNewSos);
+  }, []);
+  const [operations, setOperations] = useState([]);
 
   // --- RESOURCES STATE ---
-  const [resources, setResources] = useState([
-    { id: 1, name: 'Food', total: 2000, unit: 'packets', available: 800, allocated: 1200 },
-    { id: 2, name: 'Water', total: 5000, unit: 'L', available: 3500, allocated: 1500 },
-    { id: 3, name: 'Medical Kits', total: 100, unit: 'kits', available: 75, allocated: 25 },
-    { id: 4, name: 'Blankets', total: 300, unit: 'blankets', available: 200, allocated: 100 },
-    { id: 5, name: 'Vehicles', total: 2, unit: 'vehicles', available: 1, allocated: 1 },
-  ]);
+  const [resources, setResources] = useState([]);
 
-  const [matchingNeeds, setMatchingNeeds] = useState([
-    { id: 1, location: 'Village A', resourceName: 'Food', requestedQty: 1000, unit: 'packets', status: 'Pending' },
-    { id: 2, location: 'Shelter B', resourceName: 'Water', requestedQty: 5000, unit: 'L', status: 'Pending' }
-  ]);
+  const [matchingNeeds, setMatchingNeeds] = useState([]);
 
   // --- TEAM STATE ---
   const [teamMembers, setTeamMembers] = useState([

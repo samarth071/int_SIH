@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LiveDisasterMap from '../components/LiveDisasterMap';
 import { SOSDonutChart, IncidentBarChart, EmergencyLineChart } from '../components/CustomCharts';
 import { 
@@ -15,99 +15,31 @@ import {
 
 export default function Overview({ mockQueue, setMockQueue }) {
   // Critical Alerts list with coordinates for proximity grouping (Card 19)
-  const [alerts, setAlerts] = useState([
-    // Volunteer alerts
-    { 
-      id: 1, 
-      source: 'volunteer', 
-      reporterName: 'Rahul K. (Volunteer)', 
-      type: 'critical', 
-      text: 'Water levels rising rapidly near bridge, block is flooded', 
-      time: '2 min ago',
-      x: 220, 
-      y: 140, 
-      locationName: 'Vidhana Soudha'
-    },
-    { 
-      id: 2, 
-      source: 'volunteer', 
-      reporterName: 'Sneha M. (Volunteer)', 
-      type: 'high', 
-      text: 'Relief Center #04 running out of insulin and clean syringes', 
-      time: '10 min ago',
-      x: 520, 
-      y: 190, 
-      locationName: 'Cunningham Road'
-    },
-    { 
-      id: 3, 
-      source: 'volunteer', 
-      reporterName: 'Anil P. (Volunteer)', 
-      type: 'medium', 
-      text: '7 LoRa mesh nodes offline due to power loss', 
-      time: '30 min ago',
-      x: 380, 
-      y: 280, 
-      locationName: 'Richmond Town'
-    },
-    {
-      id: 4,
-      source: 'volunteer',
-      reporterName: 'David J. (Volunteer)',
-      type: 'critical',
-      text: 'Road cave-in reported. Blocking emergency vehicles.',
-      time: '45 min ago',
-      x: 230,
-      y: 145,
-      locationName: 'Vidhana Soudha'
-    },
-    
-    // Citizen alerts
-    { 
-      id: 5, 
-      source: 'citizen', 
-      reporterName: 'Karan S. (Citizen)', 
-      type: 'critical', 
-      text: 'Elderly couple trapped on 2nd floor, water entering lobby', 
-      time: '5 min ago',
-      x: 210, 
-      y: 135,
-      locationName: 'Vidhana Soudha'
-    },
-    { 
-      id: 6, 
-      source: 'citizen', 
-      reporterName: 'Priya R. (Citizen)', 
-      type: 'high', 
-      text: 'Severe water logging inside homes. Need immediate assistance.', 
-      time: '12 min ago',
-      x: 530, 
-      y: 195,
-      locationName: 'Cunningham Road'
-    },
-    { 
-      id: 7, 
-      source: 'citizen', 
-      reporterName: 'Vikram A. (Citizen)', 
-      type: 'medium', 
-      text: 'Tree fallen on power lines. Sparks visible.', 
-      time: '18 min ago',
-      x: 500, 
-      y: 180,
-      locationName: 'Vasanth Nagar'
-    },
-    {
-      id: 8,
-      source: 'citizen',
-      reporterName: 'Sunita G. (Citizen)',
-      type: 'high',
-      text: 'Shortage of drinking water. 50+ residents affected.',
-      time: '25 min ago',
-      x: 390,
-      y: 275,
-      locationName: 'Richmond Town'
+  const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+    function handleNewSos(e) {
+      const sos = e.detail;
+      if (!sos) return;
+
+      const newAlertItem = {
+        id: `sos-${Date.now()}`,
+        source: 'citizen',
+        reporterName: `EMERGENCY SOS (${sos.id})`,
+        type: 'critical',
+        text: `🚨 SOS ALERT: ${sos.description || 'Immediate emergency rescue requested'}`,
+        time: 'Just now',
+        x: Math.floor(Math.random() * 300) + 200,
+        y: Math.floor(Math.random() * 150) + 120,
+        locationName: sos.location || 'Surat, Gujarat',
+      };
+
+      setAlerts((prev) => [newAlertItem, ...prev]);
     }
-  ]);
+
+    window.addEventListener('sosAlertCreated', handleNewSos);
+    return () => window.removeEventListener('sosAlertCreated', handleNewSos);
+  }, []);
 
   const [selectedRegion, setSelectedRegion] = useState(null); // { nodeId, name, x, y, radius }
   const [activeAlertTab, setActiveAlertTab] = useState('volunteer'); // 'volunteer', 'citizen', 'grouped'

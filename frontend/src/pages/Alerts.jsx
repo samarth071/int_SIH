@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { mockAlerts } from '../data/mockAlerts.js';
+import { getStoredSosAlerts } from '../lib/api.js';
 import { SEVERITY_LEVELS } from '../constants/index.js';
 import { AlertIcon, ClockIcon, ShieldIcon } from '../components/icons.jsx';
 import './Alerts.css';
@@ -9,14 +10,18 @@ function getSeverity(id) {
 }
 
 function formatTime(isoString) {
-  const date = new Date(isoString);
-  const now = new Date();
-  const diffMin = Math.round((now - date) / 60000);
-  if (diffMin < 1) return 'Just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffH = Math.floor(diffMin / 60);
-  if (diffH < 24) return `${diffH}h ago`;
-  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  try {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMin = Math.round((now - date) / 60000);
+    if (diffMin < 1) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH}h ago`;
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return 'Just now';
+  }
 }
 
 export default function Alerts() {
@@ -24,7 +29,54 @@ export default function Alerts() {
   const [filterStatus, setFilterStatus] = useState('active');
   const [expanded, setExpanded] = useState(null);
 
-  const filtered = mockAlerts.filter((a) => {
+  const [allAlerts, setAllAlerts] = useState(() => {
+    const stored = getStoredSosAlerts().map((s) => ({
+      id: s.id,
+      title: `EMERGENCY SOS ALERT (${s.disasterType?.toUpperCase() || 'GENERAL'})`,
+      severity: 'critical',
+      area: s.location || 'Surat, Gujarat',
+      issuedBy: 'Citizen Emergency Dispatch',
+      time: s.submittedAt || new Date().toISOString(),
+      summary: s.description || 'Emergency SOS alert submitted by citizen',
+      instructions: [
+        'Emergency response team dispatched to coordinates.',
+        'Keep phone charged and stay on high ground.',
+      ],
+      contact: 'NDMA: 1078 | Police: 112',
+      isActive: true,
+    }));
+    return [...stored, ...mockAlerts];
+  });
+
+  useEffect(() => {
+    function handleNewSos(e) {
+      const s = e.detail;
+      if (!s) return;
+
+      const newAlert = {
+        id: s.id,
+        title: `EMERGENCY SOS ALERT (${s.disasterType?.toUpperCase() || 'GENERAL'})`,
+        severity: 'critical',
+        area: s.location || 'Surat, Gujarat',
+        issuedBy: 'Citizen Emergency Dispatch',
+        time: s.submittedAt || new Date().toISOString(),
+        summary: s.description || 'Emergency SOS alert submitted by citizen',
+        instructions: [
+          'Emergency response team dispatched to coordinates.',
+          'Keep phone charged and stay on high ground.',
+        ],
+        contact: 'NDMA: 1078 | Police: 112',
+        isActive: true,
+      };
+
+      setAllAlerts((prev) => [newAlert, ...prev]);
+    }
+
+    window.addEventListener('sosAlertCreated', handleNewSos);
+    return () => window.removeEventListener('sosAlertCreated', handleNewSos);
+  }, []);
+
+  const filtered = allAlerts.filter((a) => {
     const matchSev = filterSeverity === 'all' || a.severity === filterSeverity;
     const matchStatus =
       filterStatus === 'all' ||

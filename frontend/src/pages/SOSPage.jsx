@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DISASTER_TYPES } from '../constants/index.js';
 import { useGeolocation } from '../hooks/useGeolocation.js';
+import { sendSosAlert } from '../lib/api.js';
 import {
   ArrowLeftIcon,
   PhoneIcon,
@@ -33,6 +34,7 @@ export default function SOSPage({ navigate }) {
   const [disasterType, setDisasterType] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [apiResponse, setApiResponse] = useState(null);
   const [requestId] = useState(() => `REQ-2026-${String(Math.floor(Math.random() * 90000) + 10000)}`);
 
   const { location, loading: locLoading, error: locError, getLocation, shareLocation } = useGeolocation();
@@ -60,13 +62,23 @@ export default function SOSPage({ navigate }) {
     setStep('location');
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     setSubmitting(true);
     shareLocation();
-    setTimeout(() => {
-      setSubmitting(false);
-      setStep('success');
-    }, 1800);
+
+    const payload = {
+      requestId,
+      latitude: location?.lat || 21.1702,
+      longitude: location?.lng || 72.8311,
+      address: location?.address || 'Udhna, Surat, Gujarat — 394210',
+      disasterType: disasterType || 'general_sos',
+      description: description || 'Emergency assistance requested via app',
+    };
+
+    const res = await sendSosAlert(payload);
+    setApiResponse(res);
+    setSubmitting(false);
+    setStep('success');
   }
 
   return (
@@ -249,6 +261,12 @@ export default function SOSPage({ navigate }) {
             <div className="sos-success-row">
               <span>Status</span>
               <span className="cp-badge cp-badge-info">Received</span>
+            </div>
+            <div className="sos-success-row">
+              <span>Backend Route</span>
+              <span className="cp-badge cp-badge-success" style={{ fontSize: '11px' }}>
+                POST /api/v1/sos
+              </span>
             </div>
             <div className="sos-success-row">
               <span>Estimated Response</span>

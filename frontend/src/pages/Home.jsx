@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getActiveAlerts } from '../data/mockAlerts.js';
 import { mockShelters, SHELTER_STATUS, SHELTER_TYPES } from '../data/mockShelters.js';
 import { useGeolocation } from '../hooks/useGeolocation.js';
+import { checkBackendHealth, sendSosAlert, simulateMobileSosAlert } from '../lib/api.js';
 import AlertCard from '../components/AlertCard.jsx';
 import QuickActionCard from '../components/QuickActionCard.jsx';
 import {
@@ -83,8 +84,27 @@ export default function Home({ navigate }) {
   const [sosStatus, setSosStatus] = useState('confirm'); // 'confirm' | 'sending' | 'active'
   const [sosReqId, setSosReqId] = useState('');
   const [activeGuideTab, setActiveGuideTab] = useState('flood');
+  const [backendStatus, setBackendStatus] = useState({ healthy: null, database: null });
 
   const { location, loading: locLoading, getLocation } = useGeolocation();
+
+  useEffect(() => {
+    let isMounted = true;
+    function pingHealth() {
+      checkBackendHealth().then((res) => {
+        if (isMounted) {
+          setBackendStatus({ healthy: res.healthy, database: res.database });
+        }
+      });
+    }
+
+    pingHealth();
+    const interval = setInterval(pingHealth, 4000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   function handleOpenSos() {
     setIsSosModalOpen(true);
@@ -92,12 +112,21 @@ export default function Home({ navigate }) {
     getLocation(); // detect GPS coordinates early
   }
 
-  function handleConfirmSos() {
+  async function handleConfirmSos() {
     setSosStatus('sending');
-    setTimeout(() => {
-      setSosReqId(`REQ-2026-${String(Math.floor(Math.random() * 90000) + 10000)}`);
-      setSosStatus('active');
-    }, 1200);
+    const newReqId = `REQ-2026-${String(Math.floor(Math.random() * 90000) + 10000)}`;
+
+    await sendSosAlert({
+      requestId: newReqId,
+      latitude: location?.lat || 21.1702,
+      longitude: location?.lng || 72.8311,
+      address: location?.address || 'Udhna, Surat, Gujarat — 394210',
+      disasterType: 'one_tap_sos',
+      description: 'Instant Save Me SOS alert triggered from Home Dashboard',
+    });
+
+    setSosReqId(newReqId);
+    setSosStatus('active');
   }
 
   function handleCloseModal() {
@@ -175,11 +204,36 @@ export default function Home({ navigate }) {
       <div className="cp-page-wide">
         {/* 2. Safety Status Header Bar */}
         <section className="home-status-bar" aria-label="Citizen Status Overview">
-          <div className="home-status-item">
+          <div className="home-status-item" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
             <span className={`status-pill ${sosStatus === 'active' ? 'status-pill--emergency' : 'status-pill--safe'}`}>
               <span className="status-indicator-dot" />
               {sosStatus === 'active' ? 'SOS Active • Alert Sent' : 'Status: You are currently safe'}
             </span>
+
+            <span
+              className={`status-pill ${backendStatus.healthy ? 'status-pill--safe' : 'status-pill--warning'}`}
+              style={{ fontSize: '12px', opacity: 0.9 }}
+              title="https://sos-backend-v7vg.onrender.com/health"
+            >
+              <span
+                className="status-indicator-dot"
+                style={{ backgroundColor: backendStatus.healthy ? '#10B981' : '#F59E0B' }}
+              />
+              {backendStatus.healthy === null
+                ? 'Backend: Checking…'
+                : backendStatus.healthy
+                ? 'Backend: Online (DB Connected)'
+                : 'Backend: Offline / Standby'}
+            </span>
+
+            <button
+              className="cp-btn cp-btn-outline cp-btn-sm"
+              onClick={() => simulateMobileSosAlert()}
+              style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px' }}
+              title="Simulate receiving an SOS alert from mobile app"
+            >
+              📲 Test Receive Mobile SOS
+            </button>
           </div>
 
           <div className="home-status-meta">

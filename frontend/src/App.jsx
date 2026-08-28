@@ -26,7 +26,13 @@ import { AlertCircle, X, ShieldAlert, User, Users } from 'lucide-react';
 // NGO Portal component import
 import NgoPortal from './pages/NgoPortal.jsx';
 
+// API poller import
+import { startLiveSosPoller } from './lib/api.js';
+import { useSOS } from './context/SOSContext.jsx';
+
 export default function App() {
+  const { incomingAlert, dismissAlert: dismissContextAlert } = useSOS();
+
   // Portal selection state ('citizen', 'admin', or 'ngo')
   const [currentPortal, setCurrentPortal] = useState('citizen');
 
@@ -36,22 +42,89 @@ export default function App() {
   // Admin routing state
   const [adminTab, setAdminTab] = useState('dashboard');
   const [showSOSModal, setShowSOSModal] = useState(false);
+  const [incomingToast, setIncomingToast] = useState(null);
+
+  const activeToastAlert = incomingAlert || incomingToast;
 
   // NGO Theme state ('light' or 'dark')
   const [ngoTheme, setNgoTheme] = useState('light');
 
   // Admin Card 10: Emergency Priority Queue data state
-  const [mockQueue, setMockQueue] = useState([
-    { priority: 'Critical', incident: 'Flood Rescue', location: 'Mysuru East', affected: 18, time: '4 min ago', status: 'Waiting', team: '—' },
-    { priority: 'Critical', incident: 'Building Collapse', location: 'Zone B', affected: 9, time: '7 min ago', status: 'Responding', team: 'Rescue Team 04' },
-    { priority: 'High', incident: 'Medical Emergency', location: 'Zone C', affected: 4, time: '11 min ago', status: 'Waiting', team: '—' }
-  ]);
+  const [mockQueue, setMockQueue] = useState([]);
 
   // Admin SOS Form state
   const [formIncident, setFormIncident] = useState('Flood Rescue');
   const [formLocation, setFormLocation] = useState('');
   const [formPeople, setFormPeople] = useState('1');
   const [formPriority, setFormPriority] = useState('High');
+
+  // Real-time listener for incoming SOS alerts across all portals
+  useEffect(() => {
+    function handleNewSosAlert(alertData) {
+      if (!alertData) return;
+
+      // 1. Open live emergency popup modal (stays open until user dismisses)
+      setIncomingToast(alertData);
+
+      // 2. Add to Admin Emergency Priority Queue (with deduplication by ID & location)
+      setMockQueue((prev) => {
+        const incId = alertData.id || alertData.meshMessageId;
+        const alertLoc = alertData.location || 'Surat, Gujarat';
+        const isDuplicate = prev.some(
+          (item) => (incId && item.id === incId) || (item.location === alertLoc && item.time === 'Just now')
+        );
+        if (isDuplicate) return prev;
+
+        return [
+          {
+            id: incId,
+            priority: 'Critical',
+            incident: alertData.disasterType ? `${alertData.disasterType.toUpperCase()} Alert` : 'Emergency SOS',
+            location: alertLoc,
+            affected: 1,
+            time: 'Just now',
+            status: 'Waiting',
+            team: 'Unassigned',
+          },
+          ...prev,
+        ];
+      });
+    }
+
+    function onCustomEvent(e) {
+      if (e.detail) {
+        handleNewSosAlert(e.detail);
+      }
+    }
+
+    function onStorageEvent(e) {
+      if (e.key === 'sanjeevani_sos_alerts' && e.newValue) {
+        try {
+          const list = JSON.parse(e.newValue);
+          if (list && list.length > 0) {
+            handleNewSosAlert(list[0]);
+          }
+        } catch {}
+      }
+    }
+
+    // Attach global helper to window so any component/console can call window.triggerSosAlert()
+    window.triggerSosAlert = (alertData) => {
+      handleNewSosAlert(alertData);
+    };
+
+    window.addEventListener('sosAlertCreated', onCustomEvent);
+    window.addEventListener('storage', onStorageEvent);
+
+    // Start background live poller for server/mobile alert synchronization
+    const stopPoller = startLiveSosPoller(handleNewSosAlert);
+
+    return () => {
+      window.removeEventListener('sosAlertCreated', onCustomEvent);
+      window.removeEventListener('storage', onStorageEvent);
+      stopPoller();
+    };
+  }, []);
 
   // Dynamic Theme/Body class and data-theme switcher
   useEffect(() => {
@@ -149,8 +222,178 @@ export default function App() {
     <div 
       className={currentPortal === 'citizen' ? 'citizen-portal-theme' : currentPortal === 'admin' ? 'admin-portal-theme' : 'ngo-portal-theme'} 
       data-theme={currentPortal === 'ngo' ? ngoTheme : undefined}
-      style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+      style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100%', position: 'relative' }}
     >
+      {/* Live SOS Alert Notification Modal Popup & Top Toast across Web Dashboard */}
+      {activeToastAlert && (
+        <>
+          {/* 1. Top Banner Notification */}
+          <div
+            style={{
+              position: 'fixed',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 999999,
+              backgroundColor: '#DC2626',
+              color: '#FFFFFF',
+              padding: '14px 24px',
+              borderRadius: '12px',
+              boxShadow: '0 12px 36px rgba(220, 38, 38, 0.55)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+            }}
+            role="alert"
+          >
+            <AlertCircle size={28} />
+            <div>
+              <strong style={{ display: 'block', fontSize: '14px', letterSpacing: '0.5px' }}>
+                🚨 EMERGENCY SOS ALERT RECEIVED IN WEB DASHBOARD!
+              </strong>
+              <span style={{ fontSize: '12px', opacity: 0.95 }}>
+                ID: <strong>{activeToastAlert.id}</strong> • Location: <strong>{activeToastAlert.location}</strong> • Type: <strong style={{ textTransform: 'capitalize' }}>{activeToastAlert.disasterType}</strong>
+              </span>
+            </div>
+            <button
+              onClick={() => { setIncomingToast(null); dismissContextAlert(); }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                color: '#FFFFFF',
+                borderRadius: '50%',
+                width: '28px',
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                marginLeft: '8px',
+              }}
+              aria-label="Dismiss notification"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* 2. Centered Emergency Modal Popup */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(6px)',
+              zIndex: 9999990,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+            }}
+            onClick={() => { setIncomingToast(null); dismissContextAlert(); }}
+          >
+            <div
+              style={{
+                backgroundColor: '#18181B',
+                color: '#F4F4F5',
+                border: '2px solid #DC2626',
+                borderRadius: '16px',
+                padding: '28px',
+                maxWidth: '480px',
+                width: '100%',
+                boxShadow: '0 25px 50px -12px rgba(220, 38, 38, 0.4)',
+                position: 'relative',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px' }}>
+                <div
+                  style={{
+                    backgroundColor: '#FEF2F2',
+                    color: '#DC2626',
+                    padding: '12px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <ShieldAlert size={32} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '18px', color: '#EF4444', fontWeight: 700 }}>
+                    Incoming Emergency SOS Alert
+                  </h3>
+                  <span style={{ fontSize: '12px', color: '#A1A1AA' }}>
+                    Triggered from Mobile App / Citizen Hotline
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.04)', padding: '16px', borderRadius: '10px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                  <span style={{ color: '#A1A1AA' }}>Request ID:</span>
+                  <strong style={{ color: '#F4F4F5' }}>{activeToastAlert.id}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                  <span style={{ color: '#A1A1AA' }}>Emergency Type:</span>
+                  <strong style={{ color: '#EF4444', textTransform: 'capitalize' }}>{activeToastAlert.disasterType?.replace('_', ' ')}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                  <span style={{ color: '#A1A1AA' }}>Location:</span>
+                  <strong style={{ color: '#F4F4F5' }}>{activeToastAlert.location}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                  <span style={{ color: '#A1A1AA' }}>Status:</span>
+                  <span style={{ backgroundColor: 'rgba(220, 38, 38, 0.2)', color: '#F87171', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>CRITICAL • RECEIVED</span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => {
+                    setCurrentPortal('admin');
+                    setAdminTab('dashboard');
+                    setIncomingToast(null);
+                    dismissContextAlert();
+                  }}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#DC2626',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  View in Admin Control Panel &rarr;
+                </button>
+                <button
+                  onClick={() => { setIncomingToast(null); dismissContextAlert(); }}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: '#A1A1AA',
+                    border: '1px solid #3F3F46',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                  }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
       
       {currentPortal === 'citizen' && (
         /* ==========================================================

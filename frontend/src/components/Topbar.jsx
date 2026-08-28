@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search, Bell, AlertTriangle } from 'lucide-react';
+import { Search, Bell, AlertTriangle, Smartphone } from 'lucide-react';
+import { simulateMobileSosAlert } from '../lib/api';
 
 export default function Topbar({ activeTab, onReportSOS }) {
   const getBreadcrumbs = () => {
@@ -51,6 +52,29 @@ export default function Topbar({ activeTab, onReportSOS }) {
             <span style={styles.alertBadge}></span>
           </button>
         </div>
+
+        {/* Test Mobile SOS Alert Button */}
+        <button
+          style={{
+            backgroundColor: '#DC2626',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '18px',
+            height: '36px',
+            padding: '0 14px',
+            fontSize: '12px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+          }}
+          onClick={() => simulateMobileSosAlert()}
+          title="Simulate receiving an SOS alert from mobile app"
+        >
+          <Smartphone size={14} style={{ marginRight: '6px' }} />
+          Test Mobile SOS
+        </button>
 
         {/* SOS Action Button */}
         <button style={styles.sosButton} onClick={onReportSOS}>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { simulateMobileSosAlert } from '../lib/api.js';
 import {
   HomeIcon,
   AlertIcon,
@@ -58,6 +59,16 @@ export default function Navbar({ currentPage, navigate }) {
               </button>
             </li>
           ))}
+          <li>
+            <button
+              className="cp-btn cp-btn-danger cp-btn-sm"
+              style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '16px' }}
+              onClick={() => simulateMobileSosAlert()}
+              title="Test receiving mobile SOS alert"
+            >
+              📲 Test Mobile SOS
+            </button>
+          </li>
         </ul>
 
         {/* Mobile hamburger */}
