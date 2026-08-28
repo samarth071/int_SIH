@@ -1,0 +1,205 @@
+.sos-page {
+  padding-top: var(--cp-space-5);
+}
+
+/* Back button */
+.sos-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  background: none;
+  border: none;
+  color: var(--cp-text-secondary);
+  font-size: var(--cp-font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--cp-space-2) 0;
+  margin-bottom: var(--cp-space-4);
+  transition: color 0.15s;
+}
+
+.sos-back-btn:hover { color: var(--cp-text); }
+
+/* Step progress dots */
+.sos-steps {
+  display: flex;
+  gap: var(--cp-space-2);
+  margin-bottom: var(--cp-space-8);
+}
+
+.sos-step-dot {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+
+.sos-step-dot.done { background: var(--cp-primary); }
+.sos-step-dot.active { background: var(--cp-danger); }
+.sos-step-dot.pending { background: var(--cp-border); }
+
+/* Step content area */
+.sos-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-4);
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Confirm step */
+.sos-confirm-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: var(--cp-danger-light);
+  color: var(--cp-danger);
+  border-radius: 50%;
+  margin: 0 auto;
+}
+
+.sos-step-title {
+  font-size: var(--cp-font-size-2xl);
+  font-weight: 700;
+  color: var(--cp-text);
+  text-align: center;
+}
+
+.sos-step-desc {
+  font-size: var(--cp-font-size-base);
+  color: var(--cp-text-secondary);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.sos-confirm-info {
+  background: var(--cp-surface-2);
+  border-radius: var(--cp-radius);
+  padding: var(--cp-space-4);
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+}
+
+.sos-confirm-info p {
+  font-weight: 600;
+  color: var(--cp-text);
+  margin-bottom: var(--cp-space-2);
+}
+
+.sos-confirm-info ul {
+  margin: 0;
+  padding-left: var(--cp-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sos-action-btn {
+  margin-top: var(--cp-space-2);
+}
+
+/* Type selection */
+.sos-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--cp-space-2);
+}
+
+.sos-type-btn {
+  padding: 12px;
+  border-radius: var(--cp-radius);
+  border: 1.5px solid var(--cp-border);
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  font-size: var(--cp-font-size-base);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: var(--cp-transition-fast);
+}
+
+.sos-type-btn:hover {
+  border-color: var(--cp-primary-border);
+  background: var(--cp-primary-light);
+  color: var(--cp-primary);
+}
+
+.sos-type-btn.selected {
+  border-color: var(--cp-danger);
+  background: var(--cp-danger-light);
+  color: var(--cp-danger);
+  font-weight: 600;
+}
+
+/* Location box */
+.sos-location-box {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cp-space-3);
+  padding: var(--cp-space-5);
+  background: var(--cp-surface-2);
+  border-radius: var(--cp-radius-md);
+  border: 1px solid var(--cp-border);
+}
+
+.sos-location-box svg { color: var(--cp-primary); margin-top: 2px; flex-shrink: 0; }
+
+.sos-loc-status {
+  font-size: var(--cp-font-size-base);
+  font-weight: 600;
+  color: var(--cp-text);
+  margin-bottom: 4px;
+}
+
+.sos-loc-found { color: var(--cp-success); }
+
+.sos-loc-coords {
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+  margin-bottom: 2px;
+}
+
+.sos-loc-accuracy {
+  font-size: var(--cp-font-size-xs);
+  color: var(--cp-text-muted);
+}
+
+/* Success */
+.sos-success {
+  align-items: center;
+}
+
+.sos-success-icon {
+  color: var(--cp-success);
+  margin-bottom: var(--cp-space-2);
+}
+
+.sos-success-card {
+  width: 100%;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  overflow: hidden;
+}
+
+.sos-success-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--cp-space-3) var(--cp-space-5);
+  font-size: var(--cp-font-size-sm);
+  border-bottom: 1px solid var(--cp-border-light);
+  gap: var(--cp-space-4);
+}
+
+.sos-success-row:last-child { border-bottom: none; }
+.sos-success-row span:first-child { color: var(--cp-text-secondary); }
+.sos-success-row strong { color: var(--cp-text); font-weight: 600; }
+
+@media (max-width: 480px) {
+  .sos-type-grid {
+    grid-template-columns: 1fr;
+  }
+}

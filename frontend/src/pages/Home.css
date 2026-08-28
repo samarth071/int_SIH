@@ -1,0 +1,741 @@
+/* ============================================================
+   HOME / CITIZEN DASHBOARD STYLES
+   ============================================================ */
+
+.home-page {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: var(--cp-space-12);
+}
+
+/* 1. Alert Banner */
+.home-alert-banner {
+  background: #FEF2F2;
+  border-bottom: 1px solid #FECACA;
+  padding: 10px var(--cp-space-5);
+}
+
+.home-alert-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  font-size: var(--cp-font-size-sm);
+  color: #991B1B;
+  flex-wrap: wrap;
+}
+
+.home-alert-inner svg {
+  flex-shrink: 0;
+}
+
+.home-alert-link {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--cp-primary);
+  font-size: var(--cp-font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* 2. Safety Status Bar */
+.home-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  padding: var(--cp-space-3) var(--cp-space-5);
+  margin-top: var(--cp-space-5);
+  margin-bottom: var(--cp-space-5);
+  box-shadow: var(--cp-shadow-xs);
+  flex-wrap: wrap;
+  gap: var(--cp-space-3);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--cp-radius-full);
+  font-size: var(--cp-font-size-sm);
+  font-weight: 600;
+}
+
+.status-pill--safe {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.status-pill--emergency {
+  background: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.status-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #059669;
+  box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.5);
+  animation: status-pulse 2s infinite;
+}
+
+.status-pill--emergency .status-indicator-dot {
+  background: #DC2626;
+  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5);
+  animation: status-pulse-red 1.5s infinite;
+}
+
+@keyframes status-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.5); }
+  70% { box-shadow: 0 0 0 8px rgba(5, 150, 105, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+}
+
+@keyframes status-pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+  70% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+.home-status-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-4);
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+  flex-wrap: wrap;
+}
+
+.status-meta-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-helpline a {
+  color: var(--cp-primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* 3. Primary Emergency SOS Card */
+.home-sos-section {
+  margin-bottom: var(--cp-space-6);
+}
+
+.home-sos-card {
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  border: 1.5px solid #334155;
+  border-radius: var(--cp-radius-xl);
+  padding: var(--cp-space-6) var(--cp-space-8);
+  color: #FFFFFF;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25), 0 8px 10px -6px rgba(15, 23, 42, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.home-sos-card::after {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.18) 0%, rgba(220, 38, 38, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.home-sos-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--cp-space-4);
+  gap: var(--cp-space-3);
+  flex-wrap: wrap;
+}
+
+.home-sos-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(220, 38, 38, 0.2);
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  color: #FCA5A5;
+  font-size: var(--cp-font-size-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: var(--cp-radius-full);
+}
+
+.home-sos-note-text {
+  font-size: var(--cp-font-size-xs);
+  color: #94A3B8;
+}
+
+.home-sos-main-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cp-space-8);
+}
+
+.home-sos-text-group {
+  flex: 1;
+  max-width: 580px;
+}
+
+.home-sos-title {
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.5px;
+  margin-bottom: var(--cp-space-2);
+}
+
+.home-sos-description {
+  font-size: var(--cp-font-size-base);
+  color: #CBD5E1;
+  line-height: 1.6;
+  margin-bottom: var(--cp-space-4);
+}
+
+.home-sos-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-2);
+}
+
+.sos-pill-tag {
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94A3B8;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 9px;
+  border-radius: var(--cp-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Activate SOS Button */
+.home-sos-action-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-activate-sos-button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 140px;
+  height: 140px;
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+  color: #FFFFFF;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.8px;
+  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6), 0 10px 20px -3px rgba(220, 38, 38, 0.5);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s;
+  animation: sos-ring-glow 2.2s infinite;
+}
+
+.home-activate-sos-button:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  box-shadow: 0 0 0 12px rgba(220, 38, 38, 0.2), 0 14px 24px -3px rgba(220, 38, 38, 0.6);
+}
+
+.home-activate-sos-button:active {
+  transform: scale(0.96);
+}
+
+.sos-btn-inner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sos-btn-text {
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+@keyframes sos-ring-glow {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+  60% { box-shadow: 0 0 0 16px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+}
+
+/* 4. Section General */
+.home-section {
+  margin-bottom: var(--cp-space-6);
+}
+
+.home-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: var(--cp-space-4);
+  gap: var(--cp-space-3);
+  flex-wrap: wrap;
+}
+
+/* Quick Actions Grid */
+.home-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--cp-space-3);
+}
+
+/* 5. Shelters Preview Grid */
+.home-shelters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--cp-space-4);
+}
+
+.home-shelter-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.home-shelter-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--cp-shadow-md);
+}
+
+.home-shelter-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--cp-space-2);
+}
+
+.home-shelter-name {
+  font-size: var(--cp-font-size-base);
+  font-weight: 600;
+  color: var(--cp-text);
+  line-height: 1.3;
+  margin-bottom: 2px;
+}
+
+.home-shelter-type {
+  font-size: var(--cp-font-size-xs);
+  color: var(--cp-text-secondary);
+}
+
+.home-shelter-address {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--cp-font-size-xs);
+  color: var(--cp-text-secondary);
+}
+
+.home-shelter-address svg {
+  color: var(--cp-text-muted);
+  flex-shrink: 0;
+}
+
+.home-shelter-dist {
+  margin-left: auto;
+  color: var(--cp-primary);
+  font-size: var(--cp-font-size-xs);
+  white-space: nowrap;
+}
+
+.home-shelter-cap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-shelter-cap-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--cp-font-size-xs);
+  color: var(--cp-text-secondary);
+}
+
+.home-shelter-facilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* 6. Disaster Safety & Awareness Compact Panel */
+.home-guide-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-4);
+  padding: var(--cp-space-5);
+}
+
+.home-guide-tabs {
+  display: flex;
+  gap: var(--cp-space-2);
+  border-bottom: 1px solid var(--cp-border);
+  padding-bottom: var(--cp-space-3);
+  flex-wrap: wrap;
+}
+
+.home-guide-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--cp-radius-full);
+  border: 1.5px solid var(--cp-border);
+  background: var(--cp-surface);
+  font-size: var(--cp-font-size-sm);
+  font-weight: 500;
+  color: var(--cp-text-secondary);
+  cursor: pointer;
+  transition: var(--cp-transition-fast);
+}
+
+.home-guide-tab:hover {
+  background: var(--cp-surface-2);
+  color: var(--cp-text);
+}
+
+.home-guide-tab.active {
+  font-weight: 600;
+  background: var(--cp-surface);
+  box-shadow: var(--cp-shadow-xs);
+}
+
+.home-guide-content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--cp-space-4);
+}
+
+.home-guide-col {
+  background: var(--cp-surface-2);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius);
+  padding: var(--cp-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-3);
+}
+
+.home-guide-col--dos {
+  border-color: #A7F3D0;
+  background: #F0FDF4;
+}
+
+.home-guide-col--donts {
+  border-color: #FECACA;
+  background: #FEF2F2;
+}
+
+.home-guide-col-header {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+}
+
+.home-guide-col--dos .home-guide-col-header svg { color: #059669; }
+.home-guide-col--dos .home-guide-col-header h3 { font-size: var(--cp-font-size-sm); font-weight: 700; color: #065F46; }
+
+.home-guide-col--donts .home-guide-col-header svg { color: #DC2626; }
+.home-guide-col--donts .home-guide-col-header h3 { font-size: var(--cp-font-size-sm); font-weight: 700; color: #991B1B; }
+
+.home-guide-list {
+  margin: 0;
+  padding-left: var(--cp-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--cp-font-size-sm);
+  line-height: 1.5;
+}
+
+.home-guide-col--dos .home-guide-list { color: #166534; }
+.home-guide-col--donts .home-guide-list { color: #991B1B; }
+
+.home-guide-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--cp-space-2);
+  border-top: 1px solid var(--cp-border-light);
+  flex-wrap: wrap;
+  gap: var(--cp-space-2);
+}
+
+.home-guide-link {
+  background: none;
+  border: none;
+  color: var(--cp-primary);
+  font-size: var(--cp-font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.home-guide-link:hover { text-decoration: underline; }
+
+/* 7. Alerts list */
+.home-alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-3);
+}
+
+/* 8. Emergency SOS Confirmation Modal */
+.sos-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--cp-space-4);
+  animation: modal-fade-in 0.2s ease;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sos-modal-card {
+  background: var(--cp-surface);
+  border-radius: var(--cp-radius-xl);
+  box-shadow: var(--cp-shadow-lg);
+  max-width: 480px;
+  width: 100%;
+  padding: var(--cp-space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-4);
+  animation: modal-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--cp-border);
+}
+
+@keyframes modal-slide-up {
+  from { transform: translateY(16px) scale(0.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.sos-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cp-space-3);
+}
+
+.sos-modal-icon-wrap {
+  width: 52px;
+  height: 52px;
+  background: var(--cp-danger-light);
+  color: var(--cp-danger);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sos-modal-title {
+  font-size: var(--cp-font-size-xl);
+  font-weight: 700;
+  color: var(--cp-text);
+  margin-bottom: 4px;
+}
+
+.sos-modal-subtitle {
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+  line-height: 1.5;
+}
+
+.sos-modal-loc-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  background: var(--cp-surface-2);
+  border: 1px solid var(--cp-border);
+  border-radius: var(--cp-radius);
+  padding: var(--cp-space-3) var(--cp-space-4);
+  font-size: var(--cp-font-size-sm);
+}
+
+.sos-modal-loc-preview svg {
+  color: var(--cp-primary);
+  flex-shrink: 0;
+}
+
+.sos-loc-label {
+  font-size: var(--cp-font-size-xs);
+  color: var(--cp-text-muted);
+  display: block;
+}
+
+.sos-loc-val {
+  font-weight: 600;
+  color: var(--cp-text);
+  display: block;
+}
+
+.sos-modal-actions {
+  display: flex;
+  gap: var(--cp-space-3);
+  justify-content: flex-end;
+  margin-top: var(--cp-space-2);
+  flex-wrap: wrap;
+}
+
+.sos-modal-actions .cp-btn {
+  flex: 1;
+}
+
+/* Modal Sending State */
+.sos-modal-sending {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--cp-space-8) var(--cp-space-4);
+  gap: var(--cp-space-3);
+}
+
+.sos-modal-pulse-loader {
+  width: 48px;
+  height: 48px;
+  background: var(--cp-danger);
+  border-radius: 50%;
+  animation: sos-pulse 1.2s infinite;
+}
+
+.sos-modal-sending h2 {
+  font-size: var(--cp-font-size-xl);
+  color: var(--cp-text);
+}
+
+.sos-modal-sending p {
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+}
+
+/* Modal Active / Success State */
+.sos-modal-success-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--cp-space-2);
+}
+
+.sos-success-icon-wrap {
+  width: 56px;
+  height: 56px;
+  background: #ECFDF5;
+  color: #059669;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sos-active-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-2);
+  background: var(--cp-surface-2);
+  border-radius: var(--cp-radius);
+  border: 1px solid var(--cp-border);
+  padding: var(--cp-space-3) var(--cp-space-4);
+}
+
+.sos-active-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--cp-font-size-sm);
+  padding: 4px 0;
+  border-bottom: 1px solid var(--cp-border-light);
+}
+
+.sos-active-row:last-child {
+  border-bottom: none;
+}
+
+.sos-active-row span:first-child {
+  color: var(--cp-text-secondary);
+}
+
+/* ============================================================
+   RESPONSIVE DESIGN BREAKPOINTS
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .home-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .home-shelters-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .home-sos-card {
+    padding: var(--cp-space-5);
+  }
+
+  .home-sos-main-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--cp-space-6);
+  }
+
+  .home-sos-tags {
+    justify-content: center;
+  }
+
+  .home-actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-shelters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-guide-content {
+    grid-template-columns: 1fr;
+  }
+
+  .home-status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

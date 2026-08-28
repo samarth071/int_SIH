@@ -1,0 +1,156 @@
+.missing-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-4);
+}
+
+/* Tabs */
+.mp-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--cp-border);
+  margin-bottom: var(--cp-space-6);
+  gap: 0;
+}
+
+.mp-tab {
+  padding: 10px var(--cp-space-5);
+  font-size: var(--cp-font-size-sm);
+  font-weight: 500;
+  color: var(--cp-text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: var(--cp-transition-fast);
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.mp-tab:hover {
+  color: var(--cp-text);
+}
+
+.mp-tab.active {
+  color: var(--cp-primary);
+  border-bottom-color: var(--cp-primary);
+  font-weight: 600;
+}
+
+/* File upload (reused from ReportIncident) */
+.report-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-5);
+  border: 2px dashed var(--cp-border);
+  border-radius: var(--cp-radius-md);
+  cursor: pointer;
+  text-align: center;
+  color: var(--cp-text-secondary);
+  font-size: var(--cp-font-size-sm);
+  transition: var(--cp-transition-fast);
+  background: var(--cp-surface);
+}
+
+.report-upload-area:hover {
+  border-color: var(--cp-primary-border);
+  color: var(--cp-primary);
+  background: var(--cp-primary-light);
+}
+
+/* Success screen */
+.mp-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--cp-space-4);
+  padding: var(--cp-space-10) 0;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.mp-success svg { color: var(--cp-success); }
+.mp-success h2 { font-size: var(--cp-font-size-2xl); }
+.mp-success p { color: var(--cp-text-secondary); line-height: 1.6; }
+.mp-ref {
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-muted);
+  background: var(--cp-surface-2);
+  border-radius: var(--cp-radius);
+  padding: var(--cp-space-2) var(--cp-space-4);
+}
+
+/* View reports */
+.mp-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-3);
+}
+
+.mp-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-2);
+}
+
+.mp-card-top {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-3);
+  justify-content: space-between;
+}
+
+.mp-avatar {
+  width: 44px;
+  height: 44px;
+  background: var(--cp-surface-2);
+  color: var(--cp-text-muted);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mp-card-info { flex: 1; min-width: 0; }
+
+.mp-card-name {
+  font-size: var(--cp-font-size-md);
+  font-weight: 600;
+  color: var(--cp-text);
+  margin-bottom: 2px;
+}
+
+.mp-card-meta {
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+}
+
+.mp-card-desc {
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+  line-height: 1.5;
+}
+
+.mp-card-location {
+  font-size: var(--cp-font-size-sm);
+  color: var(--cp-text-secondary);
+}
+
+.mp-card-location strong { color: var(--cp-text); }
+
+.mp-card-reported {
+  font-size: var(--cp-font-size-xs);
+  color: var(--cp-text-muted);
+}
+
+.mp-card-reported a { color: var(--cp-primary); font-weight: 500; }
+
+@media (max-width: 480px) {
+  .mp-tab {
+    padding: 10px var(--cp-space-3);
+    font-size: var(--cp-font-size-xs);
+  }
+}

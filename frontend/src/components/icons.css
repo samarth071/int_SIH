@@ -1,0 +1,4 @@
+/* SVG icon sizes — use className to control size */
+.cp-icon { display: inline-block; flex-shrink: 0; vertical-align: middle; }
+
+/* Shared props: all icons use currentColor */
