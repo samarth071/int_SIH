@@ -611,3 +611,71 @@ body.admin-portal-theme {
     grid-column: span 12;
   }
 }
+
+/* ==========================================================================
+   NGO PORTAL THEME (Light / Dark Dynamic Theme)
+   ========================================================================== */
+.ngo-portal-theme, .ngo-portal-theme[data-theme="light"] {
+  /* Enhanced Light Theme */
+  --primary: #ea580c; 
+  --bg-color: #f3f4f6;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #111827;
+  --nav-hover: #f3f4f6;
+  --nav-active: #ffedd5;
+  --nav-active-text: #ea580c;
+  --nav-icon: #6b7280;
+  
+  --card-bg: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+
+  --critical: #dc2626;
+  --critical-bg: #fee2e2;
+  --high: #ea580c;
+  --high-bg: #ffedd5;
+  --info: #2563eb;
+  --info-bg: #dbeafe;
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --warning: #ca8a04;
+  --warning-bg: #fef9c3;
+  --border-color: #d1d5db;
+}
+
+.ngo-portal-theme[data-theme="dark"] {
+  /* Deep Navy Dark Theme */
+  --primary: #f97316; 
+  --bg-color: #0f172a; 
+  --sidebar-bg: #1e293b; 
+  --sidebar-text: #f8fafc;
+  --nav-hover: #334155;
+  --nav-active: #475569;
+  --nav-active-text: #f97316;
+  --nav-icon: #94a3b8;
+  
+  --card-bg: #1e293b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+
+  --critical: #ef4444;       
+  --critical-bg: #450a0a;
+  --high: #f97316;
+  --high-bg: #431407;
+  --info: #3b82f6;
+  --info-bg: #1e3a8a;
+  --success: #22c55e;
+  --success-bg: #052e16;
+  --warning: #eab308;
+  --warning-bg: #422006;
+  --border-color: #334155;
+}
+
+/* Apply NGO Base to Body when active */
+body.ngo-portal-theme {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+

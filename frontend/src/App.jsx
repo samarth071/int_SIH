@@ -21,10 +21,13 @@ import Overview from './pages/Overview.jsx';
 import Operations from './pages/Operations.jsx';
 import Relief from './pages/Relief.jsx';
 import AnalyticsSecurity from './pages/AnalyticsSecurity.jsx';
-import { AlertCircle, X, ShieldAlert, User } from 'lucide-react';
+import { AlertCircle, X, ShieldAlert, User, Users } from 'lucide-react';
+
+// NGO Portal component import
+import NgoPortal from './pages/NgoPortal.jsx';
 
 export default function App() {
-  // Portal selection state ('citizen' or 'admin')
+  // Portal selection state ('citizen', 'admin', or 'ngo')
   const [currentPortal, setCurrentPortal] = useState('citizen');
 
   // Citizen routing state
@@ -33,6 +36,9 @@ export default function App() {
   // Admin routing state
   const [adminTab, setAdminTab] = useState('dashboard');
   const [showSOSModal, setShowSOSModal] = useState(false);
+
+  // NGO Theme state ('light' or 'dark')
+  const [ngoTheme, setNgoTheme] = useState('light');
 
   // Admin Card 10: Emergency Priority Queue data state
   const [mockQueue, setMockQueue] = useState([
@@ -47,10 +53,19 @@ export default function App() {
   const [formPeople, setFormPeople] = useState('1');
   const [formPriority, setFormPriority] = useState('High');
 
-  // Dynamic Theme/Body class switcher
+  // Dynamic Theme/Body class and data-theme switcher
   useEffect(() => {
-    document.body.className = currentPortal === 'citizen' ? 'citizen-portal-theme' : 'admin-portal-theme';
-  }, [currentPortal]);
+    if (currentPortal === 'citizen') {
+      document.body.className = 'citizen-portal-theme';
+      document.body.removeAttribute('data-theme');
+    } else if (currentPortal === 'admin') {
+      document.body.className = 'admin-portal-theme';
+      document.body.removeAttribute('data-theme');
+    } else if (currentPortal === 'ngo') {
+      document.body.className = 'ngo-portal-theme';
+      document.body.setAttribute('data-theme', ngoTheme);
+    }
+  }, [currentPortal, ngoTheme]);
 
   // Scroll to top whenever the citizen page changes
   useEffect(() => {
@@ -131,9 +146,13 @@ export default function App() {
   };
 
   return (
-    <div className={currentPortal === 'citizen' ? 'citizen-portal-theme' : 'admin-portal-theme'} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div 
+      className={currentPortal === 'citizen' ? 'citizen-portal-theme' : currentPortal === 'admin' ? 'admin-portal-theme' : 'ngo-portal-theme'} 
+      data-theme={currentPortal === 'ngo' ? ngoTheme : undefined}
+      style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+    >
       
-      {currentPortal === 'citizen' ? (
+      {currentPortal === 'citizen' && (
         /* ==========================================================
            CITIZEN PORTAL LAYOUT
            ========================================================== */
@@ -154,7 +173,9 @@ export default function App() {
             <span>Admin Portal</span>
           </button>
         </div>
-      ) : (
+      )}
+
+      {currentPortal === 'admin' && (
         /* ==========================================================
            ADMIN PORTAL LAYOUT
            ========================================================== */
@@ -172,14 +193,14 @@ export default function App() {
             </div>
           </div>
 
-          {/* Floating Switch to Citizen Button */}
+          {/* Floating Switch to NGO Button */}
           <button 
-            onClick={() => setCurrentPortal('citizen')}
+            onClick={() => setCurrentPortal('ngo')}
             style={switcherStyles.floatingBtnAdmin}
-            title="Switch to Citizen Portal"
+            title="Switch to NGO Portal"
           >
-            <User size={18} />
-            <span>Citizen Portal</span>
+            <Users size={18} />
+            <span>NGO Portal</span>
           </button>
 
           {/* SOS Reporting Modal */}
@@ -261,6 +282,25 @@ export default function App() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {currentPortal === 'ngo' && (
+        /* ==========================================================
+           NGO PORTAL LAYOUT
+           ========================================================== */
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+          <NgoPortal theme={ngoTheme} setTheme={setNgoTheme} />
+
+          {/* Floating Switch to Citizen Button */}
+          <button 
+            onClick={() => setCurrentPortal('citizen')}
+            style={switcherStyles.floatingBtnNgo}
+            title="Switch to Citizen Portal"
+          >
+            <User size={18} />
+            <span>Citizen Portal</span>
+          </button>
         </div>
       )}
     </div>
@@ -429,6 +469,25 @@ const switcherStyles = {
     cursor: 'pointer',
     zIndex: 9999,
     boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+    transition: 'all 0.2s ease'
+  },
+  floatingBtnNgo: {
+    position: 'fixed',
+    bottom: '24px',
+    right: '24px',
+    backgroundColor: '#ea580c',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '50px',
+    padding: '12px 20px',
+    fontSize: '13px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    cursor: 'pointer',
+    zIndex: 9999,
+    boxShadow: '0 10px 25px -5px rgba(234, 88, 12, 0.3), 0 8px 10px -6px rgba(234, 88, 12, 0.3)',
     transition: 'all 0.2s ease'
   }
 };
