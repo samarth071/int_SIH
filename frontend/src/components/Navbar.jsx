@@ -40,7 +40,7 @@ export default function Navbar({ currentPage, navigate }) {
             <ShieldIcon size={22} />
           </span>
           <span className="cp-navbar-name">
-            SAHAY <span className="cp-navbar-sub">Citizen Portal</span>
+            SANJEEVANI MESH <span className="cp-navbar-sub">Citizen Portal</span>
           </span>
         </button>
 

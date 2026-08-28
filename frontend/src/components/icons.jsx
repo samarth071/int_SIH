@@ -1,5 +1,5 @@
 /**
- * SVG Icon Library — Citizen Portal
+ * SVG Icon Library — Sanjeevani Mesh
  * All icons use currentColor so they inherit text color.
  * Usage: <HomeIcon size={20} />
  */
