@@ -391,6 +391,7 @@ export default function Overview({ mockQueue, setMockQueue }) {
                 <th style={styles.th}>Time Received</th>
                 <th style={styles.th}>Status</th>
                 <th style={styles.th}>Assigned Team</th>
+                <th style={styles.th}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -432,14 +433,43 @@ export default function Overview({ mockQueue, setMockQueue }) {
                     <span 
                       style={{
                         ...styles.statusChip,
-                        color: row.status === 'Waiting' ? '#f97316' : '#3b82f6',
-                        backgroundColor: row.status === 'Waiting' ? 'rgba(249, 115, 22, 0.05)' : 'rgba(59, 130, 246, 0.05)'
+                        color: row.status === 'Relief Dispatched' ? '#10b981' : row.status === 'Waiting' ? '#f97316' : '#3b82f6',
+                        backgroundColor: row.status === 'Relief Dispatched' ? 'rgba(16, 185, 129, 0.1)' : row.status === 'Waiting' ? 'rgba(249, 115, 22, 0.05)' : 'rgba(59, 130, 246, 0.05)'
                       }}
                     >
                       {row.status}
                     </span>
                   </td>
                   <td style={{ ...styles.td, color: row.team === '—' ? '#71717a' : '#ffffff' }}>{row.team}</td>
+                  <td style={styles.td}>
+                    <button
+                      onClick={() => {
+                        setMockQueue((prev) =>
+                          prev.map((item, i) =>
+                            i === idx
+                              ? { ...item, status: 'Relief Dispatched', team: 'NDRF Unit 4 (Food & Medical)' }
+                              : item
+                          )
+                        );
+                        alert(`🚚 RELIEF DISPATCHED!\n\nFood Rations, Clean Water, & Trauma Kits dispatched to ${row.location}.`);
+                      }}
+                      style={{
+                        backgroundColor: row.status === 'Relief Dispatched' ? '#059669' : '#10B981',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      🚚 {row.status === 'Relief Dispatched' ? 'Relief En-Route' : 'Send Relief'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

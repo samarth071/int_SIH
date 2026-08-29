@@ -352,42 +352,89 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button
-                  onClick={() => {
-                    setCurrentPortal('admin');
-                    setAdminTab('dashboard');
-                    setIncomingToast(null);
-                    dismissContextAlert();
-                  }}
-                  style={{
-                    flex: 1,
-                    backgroundColor: '#DC2626',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                  }}
-                >
-                  View in Admin Control Panel &rarr;
-                </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      const reqId = activeToastAlert.id;
+                      const loc = activeToastAlert.location || 'Emergency GPS';
+                      
+                      // 1. Update queue status
+                      setMockQueue((prev) =>
+                        prev.map((item) =>
+                          item.id === reqId || item.location === loc
+                            ? { ...item, status: 'Relief Dispatched', team: 'NDRF Unit 4 (Food & Medical)' }
+                            : item
+                        )
+                      );
+
+                      // 2. Open Admin Relief & Supplies Portal
+                      setCurrentPortal('admin');
+                      setAdminTab('supplies');
+                      setIncomingToast(null);
+                      dismissContextAlert();
+
+                      // 3. Show confirmation feedback
+                      alert(`🚚 RELIEF DISPATCHED SUCCESSFULLY!\n\nNDRF Emergency Unit #4 + Food Rations, Clean Water, & Trauma Kits have been dispatched to ${loc}.`);
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: '#10B981',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                    }}
+                  >
+                    🚚 Send Relief & Supplies
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setCurrentPortal('admin');
+                      setAdminTab('dashboard');
+                      setIncomingToast(null);
+                      dismissContextAlert();
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: '#DC2626',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+                    }}
+                  >
+                    🚨 Dispatch Rescue Team
+                  </button>
+                </div>
+
                 <button
                   onClick={() => { setIncomingToast(null); dismissContextAlert(); }}
                   style={{
+                    width: '100%',
                     backgroundColor: 'transparent',
                     color: '#A1A1AA',
-                    border: '1px solid #3F3F46',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '8px',
-                    padding: '12px 16px',
-                    fontWeight: 600,
+                    padding: '8px',
+                    fontSize: '12px',
                     cursor: 'pointer',
-                    fontSize: '13px',
                   }}
                 >
-                  Dismiss
+                  Dismiss Notification
                 </button>
               </div>
             </div>
