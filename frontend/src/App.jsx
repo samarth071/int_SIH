@@ -14,14 +14,34 @@ import SafetyGuide from './pages/SafetyGuide.jsx';
 import MyRequests from './pages/MyRequests.jsx';
 import './App.css';
 
-// Admin components/pages imports
+// Admin Navigation & Layout imports
 import Sidebar from './components/Sidebar.jsx';
 import Topbar from './components/Topbar.jsx';
-import Overview from './pages/Overview.jsx';
-import Operations from './pages/Operations.jsx';
-import Relief from './pages/Relief.jsx';
-import AnalyticsSecurity from './pages/AnalyticsSecurity.jsx';
 import { AlertCircle, X, ShieldAlert, User, Users } from 'lucide-react';
+
+// Admin Dedicated Module Pages
+import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import AdminIncidents from './pages/admin/AdminIncidents.jsx';
+import AdminIncidentDetails from './pages/admin/AdminIncidentDetails.jsx';
+import AdminDisasterMap from './pages/admin/AdminDisasterMap.jsx';
+import AdminResponseTeams from './pages/admin/AdminResponseTeams.jsx';
+import AdminVolunteersOrgs from './pages/admin/AdminVolunteersOrgs.jsx';
+import AdminSheltersRelief from './pages/admin/AdminSheltersRelief.jsx';
+import AdminEarlyWarnings from './pages/admin/AdminEarlyWarnings.jsx';
+import AdminNotifications from './pages/admin/AdminNotifications.jsx';
+
+// Admin Mock Data Store
+import { 
+  initialIncidents, 
+  initialResponseTeams, 
+  initialVolunteers, 
+  initialNGOs, 
+  initialShelters, 
+  initialReliefSupplies, 
+  initialEarlyWarnings, 
+  initialRecentActivities, 
+  initialNotifications 
+} from './data/adminMockData.js';
 
 // NGO Portal component import
 import NgoPortal from './pages/NgoPortal.jsx';
@@ -35,23 +55,28 @@ export default function App() {
 
   // Admin routing state
   const [adminTab, setAdminTab] = useState('dashboard');
+  const [selectedIncident, setSelectedIncident] = useState(initialIncidents[0]);
   const [showSOSModal, setShowSOSModal] = useState(false);
+
+  // Admin Reactive Shared State Store
+  const [incidents, setIncidents] = useState(initialIncidents);
+  const [responseTeams, setResponseTeams] = useState(initialResponseTeams);
+  const [volunteers, setVolunteers] = useState(initialVolunteers);
+  const [ngos, setNgos] = useState(initialNGOs);
+  const [shelters, setShelters] = useState(initialShelters);
+  const [supplies, setSupplies] = useState(initialReliefSupplies);
+  const [earlyWarnings, setEarlyWarnings] = useState(initialEarlyWarnings);
+  const [recentActivities, setRecentActivities] = useState(initialRecentActivities);
+  const [notifications, setNotifications] = useState(initialNotifications);
 
   // NGO Theme state ('light' or 'dark')
   const [ngoTheme, setNgoTheme] = useState('light');
 
-  // Admin Card 10: Emergency Priority Queue data state
-  const [mockQueue, setMockQueue] = useState([
-    { priority: 'Critical', incident: 'Flood Rescue', location: 'Mysuru East', affected: 18, time: '4 min ago', status: 'Waiting', team: '—' },
-    { priority: 'Critical', incident: 'Building Collapse', location: 'Zone B', affected: 9, time: '7 min ago', status: 'Responding', team: 'Rescue Team 04' },
-    { priority: 'High', incident: 'Medical Emergency', location: 'Zone C', affected: 4, time: '11 min ago', status: 'Waiting', team: '—' }
-  ]);
-
-  // Admin SOS Form state
+  // Admin SOS Broadcast Form state
   const [formIncident, setFormIncident] = useState('Flood Rescue');
   const [formLocation, setFormLocation] = useState('');
   const [formPeople, setFormPeople] = useState('1');
-  const [formPriority, setFormPriority] = useState('High');
+  const [formPriority, setFormPriority] = useState('Critical');
 
   // Dynamic Theme/Body class and data-theme switcher
   useEffect(() => {
@@ -67,7 +92,7 @@ export default function App() {
     }
   }, [currentPortal, ngoTheme]);
 
-  // Scroll to top whenever the citizen page changes
+  // Scroll to top whenever page changes
   useEffect(() => {
     if (currentPortal === 'citizen') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -107,43 +132,362 @@ export default function App() {
     }
   };
 
-  // Render Admin Page
-  const renderAdminPage = () => {
-    switch (adminTab) {
-      case 'dashboard':
-        return <Overview mockQueue={mockQueue} setMockQueue={setMockQueue} />;
-      case 'responders':
-        return <Operations />;
-      case 'supplies':
-        return <Relief />;
-      case 'comms':
-        return <Operations />; // Comms and operations share the mesh network monitoring
-      case 'analytics':
-        return <AnalyticsSecurity />;
-      default:
-        return <Overview mockQueue={mockQueue} setMockQueue={setMockQueue} />;
-    }
+  // =========================================================================
+  // ADMIN INTERACTIVE HANDLERS (Shared State Synchronizers)
+  // =========================================================================
+
+  // Assign or Reassign a Response Team
+  const handleAssignTeamToIncident = (incidentId, teamId) => {
+    const team = responseTeams.find(t => t.id === teamId);
+    const incident = incidents.find(i => i.id === incidentId);
+    if (!team || !incident) return;
+
+    // 1. Update team status and assignment
+    setResponseTeams(prev => prev.map(t => {
+      if (t.id === teamId) {
+        return {
+          ...t,
+          status: 'En Route',
+          currentAssignment: `${incident.id} (${incident.type})`,
+          lastUpdate: 'Just now'
+        };
+      }
+      return t;
+    }));
+
+    // 2. Update incident assigned team
+    setIncidents(prev => prev.map(i => {
+      if (i.id === incidentId) {
+        const updated = {
+          ...i,
+          assignedTeam: team.name,
+          assignedTeamId: team.id,
+          status: 'Responding'
+        };
+        if (selectedIncident?.id === incidentId) {
+          setSelectedIncident(updated);
+        }
+        return updated;
+      }
+      return i;
+    }));
+
+    // 3. Add to activity stream
+    const newAct = {
+      id: `ACT-${Date.now()}`,
+      time: 'Just now',
+      type: 'team',
+      title: 'Response Team Assigned',
+      desc: `${team.name} assigned to ${incident.type} at ${incident.location}.`,
+      badge: 'Team Dispatched',
+      color: '#3b82f6'
+    };
+    setRecentActivities(prev => [newAct, ...prev]);
+
+    // 4. Add to notifications
+    const newNotif = {
+      id: `NOTIF-${Date.now()}`,
+      category: 'team',
+      title: 'Deployment Order Dispatched',
+      message: `${team.name} mobilized to ${incident.id} (${incident.location}).`,
+      timestamp: 'Just now',
+      read: false,
+      severity: 'info',
+      targetType: 'incident',
+      targetId: incident.id
+    };
+    setNotifications(prev => [newNotif, ...prev]);
   };
 
-  // Admin SOS Broadcast submission handler
+  // Update Team Status
+  const handleUpdateTeamStatus = (teamId, newStatus) => {
+    const team = responseTeams.find(t => t.id === teamId);
+    if (!team) return;
+
+    setResponseTeams(prev => prev.map(t => {
+      if (t.id === teamId) {
+        return { ...t, status: newStatus, lastUpdate: 'Just now' };
+      }
+      return t;
+    }));
+
+    const newNotif = {
+      id: `NOTIF-${Date.now()}`,
+      category: 'team',
+      title: `${team.name} Status Changed`,
+      message: `Status updated to "${newStatus}" for location ${team.location}.`,
+      timestamp: 'Just now',
+      read: false,
+      severity: newStatus === 'On Site' ? 'success' : 'info',
+      targetType: 'team',
+      targetId: teamId
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  // Update Supply Dispatch Status
+  const handleUpdateSupplyStatus = (supplyId, newStatus, targetDestination) => {
+    const supply = supplies.find(s => s.id === supplyId);
+    if (!supply) return;
+
+    setSupplies(prev => prev.map(s => {
+      if (s.id === supplyId) {
+        return {
+          ...s,
+          status: newStatus,
+          lastDispatchedTo: targetDestination || s.lastDispatchedTo
+        };
+      }
+      return s;
+    }));
+
+    const newAct = {
+      id: `ACT-${Date.now()}`,
+      time: 'Just now',
+      type: 'ngo',
+      title: 'Relief Logistics Update',
+      desc: `${supply.name} status changed to ${newStatus} for ${targetDestination || supply.lastDispatchedTo}.`,
+      badge: 'Supply Updated',
+      color: '#10b981'
+    };
+    setRecentActivities(prev => [newAct, ...prev]);
+
+    const newNotif = {
+      id: `NOTIF-${Date.now()}`,
+      category: 'ngo',
+      title: `Relief Shipment: ${newStatus}`,
+      message: `${supply.name} (${supply.quantity.toLocaleString()} ${supply.unit}) en route to ${targetDestination || supply.lastDispatchedTo}.`,
+      timestamp: 'Just now',
+      read: false,
+      severity: 'success',
+      targetType: 'shelter',
+      targetId: 'SHELTER-001'
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  // Broadcast Early Warning Alert
+  const handleBroadcastAlert = (newAlert) => {
+    setEarlyWarnings(prev => [newAlert, ...prev]);
+
+    const newAct = {
+      id: `ACT-${Date.now()}`,
+      time: 'Just now',
+      type: 'alert',
+      title: 'Emergency Warning Broadcasted',
+      desc: `${newAlert.title} pushed to ${newAlert.estimatedTargetCitizens.toLocaleString()} citizens in ${newAlert.zone}.`,
+      badge: 'Warning Transmitted',
+      color: '#ef4444'
+    };
+    setRecentActivities(prev => [newAct, ...prev]);
+
+    const newNotif = {
+      id: `NOTIF-${Date.now()}`,
+      category: 'alert',
+      title: `Active Warning: ${newAlert.title}`,
+      message: `Emergency broadcast initiated across ${newAlert.channels.length} channels for zone ${newAlert.zone}.`,
+      timestamp: 'Just now',
+      read: false,
+      severity: newAlert.severity === 'red' ? 'critical' : 'warning',
+      targetType: 'alert',
+      targetId: newAlert.id
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  // Notification mark as read
+  const handleMarkAsRead = (notifId) => {
+    setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
+  };
+
+  const handleMarkAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
+
+  // Broadcast SOS report submission from Topbar modal
   const handleSOSSubmit = (e) => {
     e.preventDefault();
     if (!formLocation.trim()) return;
 
-    const newSOS = {
-      priority: formPriority,
-      incident: formIncident,
+    const newId = `INC-2026-0${Math.floor(Math.random() * 80) + 900}`;
+    const newIncidentObj = {
+      id: newId,
+      type: formIncident,
+      category: formIncident.toLowerCase().includes('flood') ? 'flood' : formIncident.toLowerCase().includes('collapse') ? 'earthquake' : 'fire',
       location: formLocation,
-      affected: parseInt(formPeople) || 1,
-      time: 'Just now',
-      status: 'Waiting',
-      team: '—'
+      coordinates: { x: 300, y: 200, lat: 21.1750, lng: 72.8250 },
+      severity: formPriority === 'Critical' ? 'critical' : 'high',
+      severityLabel: formPriority,
+      timeReported: 'Just now',
+      reportedAt: new Date().toISOString(),
+      description: `Immediate SOS distress report logged by command officer. Category: ${formIncident}. People affected: ${formPeople}. Location: ${formLocation}.`,
+      sosRequestsCount: 1,
+      affectedCitizensCount: parseInt(formPeople) || 1,
+      status: 'Reported',
+      assignedTeam: 'Unassigned (Awaiting Unit)',
+      assignedTeamId: null,
+      zone: 'Zone A - West Basin',
+      criticalityScore: formPriority === 'Critical' ? 95 : 75
     };
 
-    setMockQueue([newSOS, ...mockQueue]);
+    setIncidents(prev => [newIncidentObj, ...prev]);
+
+    const newAct = {
+      id: `ACT-${Date.now()}`,
+      time: 'Just now',
+      type: 'sos',
+      title: 'New Emergency SOS Filed',
+      desc: `${formIncident} reported at ${formLocation} (${formPeople} citizen(s) affected).`,
+      badge: 'SOS Broadcast',
+      color: '#ef4444'
+    };
+    setRecentActivities(prev => [newAct, ...prev]);
+
+    const newNotif = {
+      id: `NOTIF-${Date.now()}`,
+      category: 'sos',
+      title: `Emergency Distress SOS: ${formIncident}`,
+      message: `${formLocation} — ${formPeople} affected. Immediate responder dispatch required.`,
+      timestamp: 'Just now',
+      read: false,
+      severity: 'critical',
+      targetType: 'incident',
+      targetId: newId
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+
     setShowSOSModal(false);
     setFormLocation('');
+    setSelectedIncident(newIncidentObj);
+    setAdminTab('incident-details');
   };
+
+  // Render Admin View Switcher
+  const renderAdminPage = () => {
+    switch (adminTab) {
+      case 'dashboard':
+        return (
+          <AdminDashboard 
+            incidents={incidents}
+            responseTeams={responseTeams}
+            activities={recentActivities}
+            onNavigate={(tab) => setAdminTab(tab)}
+            onSelectIncident={(inc) => {
+              setSelectedIncident(inc);
+              setAdminTab('incident-details');
+            }}
+          />
+        );
+
+      case 'incidents':
+        return (
+          <AdminIncidents 
+            incidents={incidents}
+            onSelectIncident={(inc) => {
+              setSelectedIncident(inc);
+              setAdminTab('incident-details');
+            }}
+            onNavigate={(tab) => setAdminTab(tab)}
+          />
+        );
+
+      case 'incident-details':
+        return (
+          <AdminIncidentDetails 
+            incident={selectedIncident || incidents[0]}
+            allTeams={responseTeams}
+            onBack={() => setAdminTab('incidents')}
+            onNavigate={(tab) => setAdminTab(tab)}
+            onAssignTeamToIncident={handleAssignTeamToIncident}
+          />
+        );
+
+      case 'map':
+        return (
+          <AdminDisasterMap 
+            incidents={incidents}
+            responseTeams={responseTeams}
+            shelters={shelters}
+            onSelectIncident={(inc) => {
+              setSelectedIncident(inc);
+              setAdminTab('incident-details');
+            }}
+            onNavigate={(tab) => setAdminTab(tab)}
+          />
+        );
+
+      case 'teams':
+        return (
+          <AdminResponseTeams 
+            teams={responseTeams}
+            incidents={incidents}
+            onUpdateTeamStatus={handleUpdateTeamStatus}
+            onAssignTeamToIncident={handleAssignTeamToIncident}
+            onNavigate={(tab) => setAdminTab(tab)}
+          />
+        );
+
+      case 'volunteers-orgs':
+        return (
+          <AdminVolunteersOrgs 
+            volunteers={volunteers}
+            ngos={ngos}
+            onNavigate={(tab) => setAdminTab(tab)}
+          />
+        );
+
+      case 'shelters-relief':
+        return (
+          <AdminSheltersRelief 
+            shelters={shelters}
+            supplies={supplies}
+            onUpdateSupplyStatus={handleUpdateSupplyStatus}
+            onNavigate={(tab) => setAdminTab(tab)}
+          />
+        );
+
+      case 'alerts':
+        return (
+          <AdminEarlyWarnings 
+            alerts={earlyWarnings}
+            onBroadcastAlert={handleBroadcastAlert}
+            onNavigate={(tab) => setAdminTab(tab)}
+          />
+        );
+
+      case 'notifications':
+        return (
+          <AdminNotifications 
+            notifications={notifications}
+            incidents={incidents}
+            onMarkAsRead={handleMarkAsRead}
+            onMarkAllAsRead={handleMarkAllAsRead}
+            onNavigate={(tab) => setAdminTab(tab)}
+            onSelectIncident={(inc) => {
+              setSelectedIncident(inc);
+              setAdminTab('incident-details');
+            }}
+          />
+        );
+
+      default:
+        return (
+          <AdminDashboard 
+            incidents={incidents}
+            responseTeams={responseTeams}
+            activities={recentActivities}
+            onNavigate={(tab) => setAdminTab(tab)}
+            onSelectIncident={(inc) => {
+              setSelectedIncident(inc);
+              setAdminTab('incident-details');
+            }}
+          />
+        );
+    }
+  };
+
+  const unreadNotifsCount = notifications.filter(n => !n.read).length;
+  const criticalIncidentsCount = incidents.filter(i => i.severity === 'critical').length;
 
   return (
     <div 
@@ -177,15 +521,25 @@ export default function App() {
 
       {currentPortal === 'admin' && (
         /* ==========================================================
-           ADMIN PORTAL LAYOUT
+           ADMIN PORTAL LAYOUT (Disaster Command Centre)
            ========================================================== */
         <div style={adminStyles.app}>
-          {/* Sidebar navigation */}
-          <Sidebar activeTab={adminTab} setActiveTab={setAdminTab} />
+          {/* Sidebar navigation with 8 modules */}
+          <Sidebar 
+            activeTab={adminTab} 
+            setActiveTab={setAdminTab} 
+            unreadNotifsCount={unreadNotifsCount}
+            criticalIncidentsCount={criticalIncidentsCount}
+          />
 
           {/* Main workspace */}
           <div style={adminStyles.main}>
-            <Topbar activeTab={adminTab} onReportSOS={() => setShowSOSModal(true)} />
+            <Topbar 
+              activeTab={adminTab} 
+              onReportSOS={() => setShowSOSModal(true)} 
+              onNavigate={(tab) => setAdminTab(tab)}
+              unreadCount={unreadNotifsCount}
+            />
             
             {/* Main scrollable body */}
             <div style={adminStyles.content}>
@@ -232,7 +586,8 @@ export default function App() {
                       <option value="Building Collapse">Building Collapse</option>
                       <option value="Medical Emergency">Medical Emergency</option>
                       <option value="Hazmat Leak">Hazmat Leak</option>
-                      <option value="Power Outage">Power Grid Failure</option>
+                      <option value="Power Grid Failure">Power Grid Failure</option>
+                      <option value="Landslide Blockade">Landslide Blockade</option>
                     </select>
                   </div>
 
@@ -307,14 +662,14 @@ export default function App() {
   );
 }
 
-// Styles specific to the Admin Portal layout (inline as in samarth branch)
+// Styles specific to the Admin Portal layout
 const adminStyles = {
   app: {
     display: 'flex',
     width: '100%',
     height: '100vh',
     overflow: 'hidden',
-    backgroundColor: '#09090b',
+    backgroundColor: '#090a10',
     flex: 1
   },
   main: {
@@ -322,13 +677,14 @@ const adminStyles = {
     flexDirection: 'column',
     flexGrow: 1,
     height: '100vh',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    backgroundColor: '#090a10'
   },
   content: {
     flexGrow: 1,
-    padding: '32px',
+    padding: '28px 32px',
     overflowY: 'auto',
-    backgroundColor: '#09090b'
+    backgroundColor: '#090a10'
   },
   modalOverlay: {
     position: 'fixed',
@@ -336,19 +692,20 @@ const adminStyles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    backdropFilter: 'blur(4px)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backdropFilter: 'blur(6px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 100
   },
   modalContent: {
-    width: '400px',
+    width: '420px',
     padding: '24px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px'
+    gap: '16px',
+    backgroundColor: '#12141e'
   },
   modalHeader: {
     display: 'flex',
@@ -363,8 +720,8 @@ const adminStyles = {
     gap: '8px'
   },
   modalTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
+    fontSize: '15px',
+    fontWeight: '700',
     color: '#ffffff'
   },
   modalCloseBtn: {
@@ -395,10 +752,10 @@ const adminStyles = {
     color: '#a1a1aa'
   },
   input: {
-    height: '36px',
+    height: '38px',
     borderRadius: '8px',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     color: '#ffffff',
     fontSize: '12px',
     padding: '0 12px',
@@ -406,10 +763,10 @@ const adminStyles = {
     transition: 'all 0.2s ease'
   },
   select: {
-    height: '36px',
+    height: '38px',
     borderRadius: '8px',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     color: '#ffffff',
     fontSize: '12px',
     padding: '0 12px',
@@ -421,17 +778,17 @@ const adminStyles = {
     color: '#ffffff',
     border: 'none',
     borderRadius: '8px',
-    height: '38px',
-    fontSize: '12px',
+    height: '40px',
+    fontSize: '13px',
     fontWeight: '700',
     cursor: 'pointer',
     marginTop: '8px',
     transition: 'all 0.2s ease',
-    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)'
+    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
   }
 };
 
-// Premium Floating Portal Switcher Button Styles
+// Floating Switcher Buttons
 const switcherStyles = {
   floatingBtnCitizen: {
     position: 'fixed',

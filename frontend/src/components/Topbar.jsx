@@ -1,29 +1,42 @@
 import React from 'react';
-import { Search, Bell, AlertTriangle } from 'lucide-react';
+import { Search, Bell, AlertTriangle, Radio } from 'lucide-react';
 
-export default function Topbar({ activeTab, onReportSOS }) {
+export default function Topbar({ 
+  activeTab, 
+  onReportSOS, 
+  onNavigate,
+  unreadCount = 0 
+}) {
   const getBreadcrumbs = () => {
     switch (activeTab) {
       case 'dashboard':
-        return ['Disaster Operations', 'Dashboard'];
-      case 'responders':
-        return ['Disaster Operations', 'Responders & Operations'];
-      case 'supplies':
-        return ['Resource Management', 'Relief & Supply Status'];
-      case 'comms':
-        return ['Network Operations', 'Communications & Mesh'];
-      case 'analytics':
-        return ['Intelligence & Audit', 'Analytics & Reports'];
+        return ['Disaster Command', 'Live Overview'];
+      case 'incidents':
+        return ['Incident Management', 'Incident Directory'];
+      case 'incident-details':
+        return ['Incident Management', '360° Radius Situational Intelligence'];
+      case 'map':
+        return ['Spatial Operations', 'Tactical Disaster Map'];
+      case 'teams':
+        return ['Responder Operations', 'Response Team Fleet'];
+      case 'volunteers-orgs':
+        return ['Civil Society', 'Volunteers & NGO Partners'];
+      case 'shelters-relief':
+        return ['Logistics & Supply', 'Shelters & Relief Distribution'];
+      case 'alerts':
+        return ['Risk & Warning', 'Early Warnings & Targeted Alerts'];
+      case 'notifications':
+        return ['Command Center', 'Notification Centre'];
       default:
-        return ['Disaster Operations', 'Command Center'];
+        return ['Disaster Command', 'Overview'];
     }
   };
 
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <div style={styles.topbar}>
-      {/* Breadcrumbs */}
+    <header style={styles.topbar}>
+      {/* Dynamic Breadcrumbs */}
       <div style={styles.breadcrumbs}>
         <span style={styles.breadcrumbItem}>{breadcrumbs[0]}</span>
         <span style={styles.separator}>/</span>
@@ -34,43 +47,41 @@ export default function Topbar({ activeTab, onReportSOS }) {
 
       {/* Right Controls */}
       <div style={styles.controls}>
-        {/* Search */}
-        <div style={styles.searchContainer}>
-          <Search size={16} style={styles.searchIcon} />
-          <input 
-            type="text" 
-            placeholder="Search incidents, nodes, shelters..." 
-            style={styles.searchInput}
-          />
-        </div>
-
         {/* Alerts Bell */}
         <div style={styles.iconButtonContainer}>
-          <button style={styles.iconButton}>
-            <Bell size={18} color="#a1a1aa" />
-            <span style={styles.alertBadge}></span>
+          <button 
+            style={styles.iconButton}
+            onClick={() => onNavigate && onNavigate('notifications')}
+            title="Notification Centre"
+          >
+            <Bell size={17} color="#ffffff" />
+            {unreadCount > 0 && (
+              <span style={styles.alertBadge}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
         </div>
 
         {/* SOS Action Button */}
         <button style={styles.sosButton} onClick={onReportSOS}>
           <AlertTriangle size={15} style={{ marginRight: '6px' }} />
-          Report SOS
+          <span>Broadcast SOS</span>
         </button>
       </div>
-    </div>
+    </header>
   );
 }
 
 const styles = {
   topbar: {
-    height: '72px',
+    height: '68px',
     borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '0 32px',
-    backgroundColor: '#09090b',
+    backgroundColor: '#090a10',
     flexShrink: 0
   },
   breadcrumbs: {
@@ -84,7 +95,8 @@ const styles = {
     color: '#71717a'
   },
   breadcrumbActive: {
-    color: '#ffffff'
+    color: '#ffffff',
+    fontWeight: '600'
   },
   separator: {
     color: '#3f3f46'
@@ -92,68 +104,54 @@ const styles = {
   controls: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px'
-  },
-  searchContainer: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center'
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '12px',
-    color: '#71717a'
-  },
-  searchInput: {
-    width: '280px',
-    height: '36px',
-    borderRadius: '18px',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    paddingLeft: '38px',
-    paddingRight: '16px',
-    color: '#ffffff',
-    fontSize: '12px',
-    outline: 'none',
-    transition: 'all 0.2s ease'
+    gap: '14px'
   },
   iconButtonContainer: {
     position: 'relative'
   },
   iconButton: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    width: '38px',
+    height: '38px',
+    borderRadius: '10px',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     border: '1px solid rgba(255, 255, 255, 0.08)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    position: 'relative'
+    position: 'relative',
+    transition: 'all 0.2s ease'
   },
   alertBadge: {
     position: 'absolute',
-    top: '2px',
-    right: '2px',
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    backgroundColor: '#ef4444'
+    top: '-4px',
+    right: '-4px',
+    minWidth: '18px',
+    height: '18px',
+    padding: '0 4px',
+    borderRadius: '9px',
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
+    fontSize: '10px',
+    fontWeight: '700',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 2px 6px rgba(239, 68, 68, 0.5)'
   },
   sosButton: {
-    backgroundColor: '#ffffff',
-    color: '#0c0c0e',
+    backgroundColor: '#ef4444',
+    color: '#ffffff',
     border: 'none',
-    borderRadius: '18px',
-    height: '36px',
+    borderRadius: '10px',
+    height: '38px',
     padding: '0 16px',
     fontSize: '12px',
-    fontWeight: '600',
+    fontWeight: '700',
     display: 'flex',
     alignItems: 'center',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
-    boxShadow: '0 4px 12px rgba(255, 255, 255, 0.1)'
+    boxShadow: '0 4px 14px rgba(239, 68, 68, 0.3)'
   }
 };
