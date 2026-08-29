@@ -110,6 +110,7 @@ export default function Overview({ mockQueue, setMockQueue }) {
   ]);
 
   const [selectedRegion, setSelectedRegion] = useState(null); // { nodeId, name, x, y, radius }
+  const [selectedNode, setSelectedNode] = useState(null);
   const [activeAlertTab, setActiveAlertTab] = useState('volunteer'); // 'volunteer', 'citizen', 'grouped'
 
   // Get active pixel radius based on selection
@@ -291,7 +292,12 @@ export default function Overview({ mockQueue, setMockQueue }) {
           <LiveDisasterMap 
             selectedRegion={selectedRegion}
             onSelectRegion={setSelectedRegion}
-            onResetSelection={() => setSelectedRegion(null)}
+            onResetSelection={() => {
+              setSelectedRegion(null);
+              setSelectedNode(null);
+            }}
+            selectedNode={selectedNode}
+            setSelectedNode={setSelectedNode}
           />
         </div>
 
@@ -462,54 +468,77 @@ export default function Overview({ mockQueue, setMockQueue }) {
               </tr>
             </thead>
             <tbody>
-              {filteredQueue.map((row, idx) => (
-                <tr key={idx} style={styles.tr}>
-                  <td style={styles.td}>
-                    <span 
-                      style={{
-                        ...styles.priorityBadge,
-                        backgroundColor: row.priority === 'Critical' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(249, 115, 22, 0.15)',
-                        color: row.priority === 'Critical' ? '#ef4444' : '#f97316'
-                      }}
-                    >
+              {filteredQueue.map((row, idx) => {
+                let matchedNodeId = null;
+                if (row.location === 'Mysuru East') matchedNodeId = 1;
+                else if (row.location === 'Zone B') matchedNodeId = 2;
+                else if (row.location === 'Zone C') matchedNodeId = 3;
+
+                return (
+                  <tr 
+                    key={idx} 
+                    style={{ ...styles.tr, cursor: 'pointer' }}
+                    onClick={() => {
+                      if (matchedNodeId) {
+                        const targetNode = {
+                          id: matchedNodeId,
+                          type: 'incidents',
+                          x: matchedNodeId === 1 ? 220 : matchedNodeId === 2 ? 380 : 520,
+                          y: matchedNodeId === 1 ? 140 : matchedNodeId === 2 ? 280 : 190,
+                          label: matchedNodeId === 1 ? 'Critical: Flood Rescue' : matchedNodeId === 2 ? 'Critical: Building Collapse' : 'High: Medical Emergency',
+                          desc: matchedNodeId === 1 ? '18 People Affected, Mysuru East' : matchedNodeId === 2 ? '9 People Affected, Zone B' : '4 People Affected, Zone C'
+                        };
+                        setSelectedNode(targetNode);
+                      }
+                    }}
+                  >
+                    <td style={styles.td}>
                       <span 
                         style={{
-                          ...styles.priorityDot,
-                          backgroundColor: row.priority === 'Critical' ? '#ef4444' : '#f97316'
+                          ...styles.priorityBadge,
+                          backgroundColor: row.priority === 'Critical' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(249, 115, 22, 0.15)',
+                          color: row.priority === 'Critical' ? '#ef4444' : '#f97316'
                         }}
-                        className={row.priority === 'Critical' ? 'pulse-dot' : ''}
-                      ></span>
-                      {row.priority}
-                    </span>
-                  </td>
-                  <td style={{ ...styles.td, fontWeight: '600' }}>{row.incident}</td>
-                  <td style={styles.td}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <MapPin size={12} color="#a1a1aa" />
-                      {row.location}
-                    </div>
-                  </td>
-                  <td style={{ ...styles.td, textAlign: 'center' }}>{row.affected}</td>
-                  <td style={styles.td}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#71717a' }}>
-                      <Clock size={12} />
-                      {row.time}
-                    </div>
-                  </td>
-                  <td style={styles.td}>
-                    <span 
-                      style={{
-                        ...styles.statusChip,
-                        color: row.status === 'Waiting' ? '#f97316' : '#3b82f6',
-                        backgroundColor: row.status === 'Waiting' ? 'rgba(249, 115, 22, 0.05)' : 'rgba(59, 130, 246, 0.05)'
-                      }}
-                    >
-                      {row.status}
-                    </span>
-                  </td>
-                  <td style={{ ...styles.td, color: row.team === '—' ? '#71717a' : '#ffffff' }}>{row.team}</td>
-                </tr>
-              ))}
+                      >
+                        <span 
+                          style={{
+                            ...styles.priorityDot,
+                            backgroundColor: row.priority === 'Critical' ? '#ef4444' : '#f97316'
+                          }}
+                          className={row.priority === 'Critical' ? 'pulse-dot' : ''}
+                        ></span>
+                        {row.priority}
+                      </span>
+                    </td>
+                    <td style={{ ...styles.td, fontWeight: '600' }}>{row.incident}</td>
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <MapPin size={12} color="#a1a1aa" />
+                        {row.location}
+                      </div>
+                    </td>
+                    <td style={{ ...styles.td, textAlign: 'center' }}>{row.affected}</td>
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#71717a' }}>
+                        <Clock size={12} />
+                        {row.time}
+                      </div>
+                    </td>
+                    <td style={styles.td}>
+                      <span 
+                        style={{
+                          ...styles.statusChip,
+                          color: row.status === 'Waiting' ? '#f97316' : '#3b82f6',
+                          backgroundColor: row.status === 'Waiting' ? 'rgba(249, 115, 22, 0.05)' : 'rgba(59, 130, 246, 0.05)'
+                        }}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                    <td style={{ ...styles.td, color: row.team === '—' ? '#71717a' : '#ffffff' }}>{row.team}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
