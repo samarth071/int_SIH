@@ -11,7 +11,13 @@ import {
   Eye
 } from 'lucide-react';
 
-export default function LiveDisasterMap({ selectedRegion, onSelectRegion, onResetSelection }) {
+export default function LiveDisasterMap({ 
+  selectedRegion, 
+  onSelectRegion, 
+  onResetSelection,
+  selectedNode: propSelectedNode,
+  setSelectedNode: propSetSelectedNode
+}) {
   const [activeLayers, setActiveLayers] = useState({
     incidents: true,
     sos: true,
@@ -24,7 +30,9 @@ export default function LiveDisasterMap({ selectedRegion, onSelectRegion, onRese
     flood: true
   });
 
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [localSelectedNode, setLocalSelectedNode] = useState(null);
+  const selectedNode = propSelectedNode !== undefined ? propSelectedNode : localSelectedNode;
+  const setSelectedNode = propSetSelectedNode !== undefined ? propSetSelectedNode : setLocalSelectedNode;
 
   const handleMapClick = (e) => {
     // If the user clicked on an interactive node, ignore it
@@ -252,6 +260,44 @@ export default function LiveDisasterMap({ selectedRegion, onSelectRegion, onRese
           <circle cx="350" cy="200" r="180" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
           <circle cx="350" cy="200" r="280" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
 
+          {/* Dotted Route Line to Assigned Team */}
+          {selectedNode?.type === 'incidents' && (
+            (() => {
+              let responderX = null;
+              let responderY = null;
+              if (selectedNode.id === 1) {
+                responderX = 250;
+                responderY = 155;
+              } else if (selectedNode.id === 2) {
+                responderX = 250;
+                responderY = 155;
+              } else if (selectedNode.id === 3) {
+                responderX = 410;
+                responderY = 260;
+              }
+
+              if (responderX !== null) {
+                return (
+                  <g>
+                    <path
+                      d={`M ${selectedNode.x},${selectedNode.y} L ${responderX},${responderY}`}
+                      fill="none"
+                      stroke="#ec4899"
+                      strokeWidth="2"
+                      strokeDasharray="5,5"
+                    >
+                      <animate attributeName="stroke-dashoffset" values="0;20" dur="2s" repeatCount="indefinite" />
+                    </path>
+                    <circle cx={responderX} cy={responderY} r="14" fill="none" stroke="#ec4899" strokeWidth="1.5">
+                      <animate attributeName="r" values="5;14" dur="1.5s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.8;0" dur="1.5s" repeatCount="indefinite" />
+                    </circle>
+                  </g>
+                );
+              }
+            })()
+          )}
+
           {/* Custom Pin Marker */}
           {selectedNode?.id === 'custom-pin' && (
             <g transform={`translate(${selectedNode.x}, ${selectedNode.y})`}>
@@ -345,6 +391,17 @@ export default function LiveDisasterMap({ selectedRegion, onSelectRegion, onRese
             </div>
             <div style={styles.popupTitle}>{selectedNode.label}</div>
             <div style={styles.popupDesc}>{selectedNode.desc}</div>
+
+            {selectedNode.type === 'incidents' && (
+              <div style={styles.popupAssignedSection}>
+                <span style={styles.assignedLabel}>Assigned Unit:</span>
+                <span style={styles.assignedValue}>
+                  {selectedNode.id === 1 && "Rescue Team 04 (En Route - ETA 6m)"}
+                  {selectedNode.id === 2 && "Rescue Team 04 (En Route - ETA 6m)"}
+                  {selectedNode.id === 3 && "Medical Team 02 (Stationed - Available)"}
+                </span>
+              </div>
+            )}
 
             {/* Filter Dashboard by Radius Controls */}
             <div style={styles.popupSelectRegionSection}>
@@ -633,5 +690,25 @@ const styles = {
     backgroundColor: '#3b82f6',
     border: '1px solid #3b82f6',
     color: '#ffffff'
+  },
+  popupAssignedSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+    paddingTop: '10px',
+    marginTop: '4px'
+  },
+  assignedLabel: {
+    fontSize: '10px',
+    fontWeight: '600',
+    color: '#a1a1aa',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  assignedValue: {
+    fontSize: '11px',
+    fontWeight: '600',
+    color: '#ec4899'
   }
 };
